@@ -1,5 +1,6 @@
-// 任务 1：文档自召回测试 + 负例门禁。一个脚本回答两个问题：
-//   正例——「该答的答得上来吗」；负例——「不该答的一个都没答吗」。只测前者等于没测。
+// 一个脚本回答三个问题：
+//   正例——「该答的答得上来吗」；负例——「不该答的一个都没答吗」；别名对账——「ALIASES 还和文档词表对得上吗」。
+//   只测第一个等于没测：小库全量投喂下几乎什么都"能答"，而放宽召回的代价全在后两项上。
 //
 // 正例集**合并读两份**（刻意各占一个文件名、永不互写；同名互覆盖真丢过一次工作）：
 //   cases.gen.json    规则机械派生（`node gen-cases.mjs` 产物，可复现、可 diff、换文档自动跟随）→ 基线
@@ -7,15 +8,15 @@
 // 负例集：cases.neg.md（不带 ? 的每一条都是硬门禁，返回 ANSWER 即假阳性）。
 //
 // 断言口径：**返回引用里的 top1 必须是该条目**（比对（指南·章节 第N条 Qn）里的 Qn）。
-// 只看 ANSWER/REFUSE 不够——小库全量投喂下几乎什么都"能答"，正解没排第一就是答非所问。
 // 规则派生变体带 `ambiguous`（残余关键词还落在别条条目标题里）：那种 top1 争不过去不算缺陷，
 // 只报不判、排除在门禁分母外——否则分母被噪声污染，绿也就没意义了。
 //
-// 用法：node recall.mjs          # 汇总 + miss 清单 + 负例结果
+// 用法：node recall.mjs          # 汇总 + miss 清单 + 负例结果 + 别名对账
 //       node recall.mjs --json   # 另外输出机器可读 JSON（逐条结果，给诊断脚本用）
-// 退出码：miss 或负例误放 → 1；全绿 → 0；用例集与库/契约对不上 → 2。
+// 退出码：miss / 负例误放 / 固定话术变形 / 别名失效 → 1；全绿 → 0；用例集与库或契约对不上 → 2。
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
+import { auditAliases, extractAliases, normalize } from './alias-audit.mjs';
 
 const TARGET = process.env.KB_ASK_TARGET === 'installed'
   ? '/Users/mac/Library/Application Support/dsh-desktop/harness/.agent-presets/kb-qa/kb-ask.mjs'
@@ -106,9 +107,31 @@ if (!tool) { console.error('工具没注册上'); process.exit(2); }
 // 用例集必须和库里的 Qn 一一对应：文档换了（增删条目）时先在这里炸，别默默漏测。
 const db = new DatabaseSync(DB, { readOnly: true });
 const inDb = new Set();
-for (const r of db.prepare('select payload from kb').all()) {
+const kbRows = [];
+for (const r of db.prepare('select name, summary, payload, tags from kb').all()) {
   const re = /^[ \t#>*-]{0,6}Q[ \t]*(\d+)/gim;
   for (let m = re.exec(String(r.payload ?? '')); m !== null; m = re.exec(String(r.payload ?? ''))) inDb.add(Number(m[1]));
+  // 语料口径与引擎 idsForTerm() 一致：四列拼起来做子串匹配（转小写、去空白）。
+  kbRows.push({ text: normalize([r.name, r.summary, r.payload, r.tags].join(' ')) });
+}
+
+// 别名表 ↔ 文档词表对账（第 4 轮 ①）。为什么在这里而不是等人看负例：换一份手册时
+// ALIASES 会**成批**失效（展开词不再是文档原词 → 死别名；或太泛 → 放行面），
+// 而所有正负例照样全绿。第 3 轮那两条（门口、被褥）是靠负例集偶然抓到的，不能指望运气。
+let aliasFails = [];
+let aliasWarns = [];
+let aliasNotes = [];
+let aliasCount = 0;
+try {
+  const entries = extractAliases(TARGET);
+  aliasCount = entries.length;
+  const a = auditAliases(entries, kbRows);
+  aliasFails = a.fails;
+  aliasWarns = a.warns;
+  aliasNotes = a.notes;
+} catch (e) {
+  console.error(`别名对账跑不起来：${e.message}`);
+  process.exit(2);
 }
 db.close();
 const caseQs = items.map((it) => num(it.q));
@@ -238,8 +261,7 @@ function loadNegs(file) {
       section,
       question,
       hard: !diagnostic,
-      expectVia: /behavior-gate/.test(section) ? 'behavior-gate'
-        : /intent-gate/.test(section) ? 'intent-gate' : null,
+      expectVia: (/([a-z][a-z-]*-gate)/.exec(section) || [])[1] ?? null,
     });
   }
   return out;
@@ -275,15 +297,26 @@ for (const r of diagAnswer) {
 
 dispose?.();
 
-const bad = miss.length + falsePositives.length + replyBroken.length;
+console.log(`\n=== 别名对账（${TARGET.split('/').pop()} 的 ALIASES ↔ 库内原词）===`);
+console.log(`别名 ${aliasCount} 条：致命 ${aliasFails.length}　告警 ${aliasWarns.length}`);
+for (const f of aliasFails) console.log(`  !!! ${f}`);
+for (const w of aliasWarns) console.log(`  ~~~ ${w}`);
+if (aliasNotes.length > 0) {
+  console.log(`  · 说明：${aliasNotes.length} 条别名的 key 本身就是文档原词（${aliasNotes.slice(0, 8).join(' ')}${aliasNotes.length > 8 ? ' …' : ''}）`
+    + '——这类行只补展开词，救不了"key 匹配不上"的 miss');
+}
+
+const bad = miss.length + falsePositives.length + replyBroken.length + aliasFails.length;
 if (process.argv.includes('--json')) {
   console.log('\n' + JSON.stringify({
     ok: ok.length, miss: miss.length, exempt: exempt.length,
     hardNegs: hard.length, falsePositives: falsePositives.length, wrongLayer: wrongLayer.length,
+    aliasFails, aliasWarns,
     rows, negs: negRows,
   }));
 }
 console.log(bad === 0
-  ? '\n正例全绿、负例零误放、固定话术未变形。'
-  : `\n不通过：miss ${miss.length}　负例误放 ${falsePositives.length}　固定话术变形 ${replyBroken.length}`);
+  ? '\n正例全绿、负例零误放、固定话术未变形、别名表与文档词表对得上。'
+  : `\n不通过：miss ${miss.length}　负例误放 ${falsePositives.length}　固定话术变形 ${replyBroken.length}　`
+    + `别名失效 ${aliasFails.length}`);
 process.exit(bad > 0 ? 1 : 0);
