@@ -31,8 +31,11 @@ const SHOULD_ANSWER = [
   '不想去军训了',
   '军训参不了怎么办',
   '不愿参加军训行吗',
-  '不想参加队列训练',
 ];
+// 灰区：只打印不断言。`不想参加队列训练` 原在这里断言 ANSWER，但全文（含军训安排）没有
+// "队列训练"这个说法，闭卷下答它等于替文档编内容；cases.neg.md 第 6 小节早已把它降为
+// 诊断项（出现 ANSWER 交人判读）。两边口径以那份文件为准，这里不再自行断言。
+const GRAY = ['不想参加队列训练'];
 
 const run = async (q) => {
   const text = String(await tool.execute({ question: q }));
@@ -52,5 +55,10 @@ for (const [label, qs, want] of [['必须拒绝', MUST_REFUSE, 'out'], ['应当�
     if (!ok) bad++;
     console.log(`${ok ? 'ok  ' : '!!!!'} ${q.padEnd(12, ' ')} ${r.verdict.padEnd(7)} via=${(r.via || '-').padEnd(13)} ${r.refs}`);
   }
+}
+console.log('\n=== 灰区（只打印，不断言）===');
+for (const q of GRAY) {
+  const r = await run(q);
+  console.log(`     ${q.padEnd(12, ' ')} ${r.verdict.padEnd(7)} via=${(r.via || '-').padEnd(13)} ${r.refs}`);
 }
 console.log(`\n异常 ${bad} 条`);

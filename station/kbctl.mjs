@@ -5,7 +5,7 @@
 //   node kbctl.mjs import docs/*.pdf                            # 走宿主 /api/kb/import 正规管线
 //   node kbctl.mjs status                                       # 库里有什么、会不会走全量投喂
 //   node kbctl.mjs install [--root <路径>] [--dry-run]          # 渲染并安装预设
-//   node kbctl.mjs verify                                       # 47 例回归 + 挂载自检 + 库健康
+//   node kbctl.mjs verify                                       # 端到端自测 + 正例/负例召回回归（打已安装预设）+ 库健康
 //   node kbctl.mjs doctor                                       # 环境体检（形态/端口/node:sqlite）
 //
 // 设计前提（与你的判断一致）：DSH、dsh-knowledge-base、dsh-im 各环境都一样，
@@ -321,6 +321,12 @@ async function cmdVerify() {
   const db = dbPath(cfg);
   const env = { ...process.env, KB_ASK_DB: db || '', KB_ASK_TITLE: cfg.title, KB_ASK_CATEGORY: cfg.category };
   execFileSync(process.execPath, [join(ROOT, 'test-kb-ask.mjs')], { env, stdio: 'inherit' });
+  // 装完必须连**负例**一起验：只看正例（test-kb-ask 那 55 例）会掩盖"放宽召回把越界问题放进来"
+  // 这一类退化——第 3 轮就是靠 recall 里新接的负例门禁才发现三条一直存在的假阳性。
+  // 这里刻意用 KB_ASK_TARGET=installed：验的是刚装进 .agent-presets 的那份，不是工作区那份。
+  console.log('\n--- 召回与越界回归（对已安装预设跑：正例合并集 + cases.neg.md 硬负例）---');
+  execFileSync(process.execPath, [join(ROOT, 'recall.mjs')],
+    { env: { ...env, KB_ASK_TARGET: 'installed' }, stdio: 'inherit' });
   const host = await probeHost();
   if (host) {
     const res = await fetch(`http://127.0.0.1:${host.port}/api/kb/search?q=${encodeURIComponent('宿舍')}`);
