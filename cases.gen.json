@@ -1,1053 +1,2001 @@
 {
-  "generatedBy": "5 个口语变体由模型（DeepSeek Harness agent）逐条手写，非脚本生成；条目标题/章节原文取自 kb.sqlite，可对照审计",
-  "db": "/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite",
-  "category": "新生指南",
-  "axes": [
-    "简称",
-    "错别字",
-    "倒装",
-    "否定式",
-    "近义换词"
-  ],
-  "note": "每个 Qn 条目 5 个口语变体（简称/错别字/倒装/否定式/近义换词）。断言：kb_ask 返回引用里的 top1 必须是该 Qn。",
-  "itemCount": 37,
-  "total": 185,
-  "items": [
+ "generatedBy": "gen-cases.mjs（规则机械派生，可复现、可 diff、换文档自动跟随）",
+ "db": "kb.sqlite",
+ "category": "新生指南",
+ "axes": [
+  "sub1",
+  "prefix",
+  "bare",
+  "tail",
+  "whswap",
+  "topic"
+ ],
+ "note": "与 cases.human.json（模型手写 5 轴）互补：这份量的是\"改述后还认不认得\"，那份量的是\"口语化后漏不漏\"。两份由 recall.mjs 合并读，永不互写。",
+ "itemCount": 37,
+ "total": 154,
+ "ambiguous": 1,
+ "dropped": 0,
+ "perRule": {
+  "sub1": {
+   "n": 37,
+   "amb": 0
+  },
+  "prefix": {
+   "n": 37,
+   "amb": 0
+  },
+  "bare": {
+   "n": 37,
+   "amb": 0
+  },
+  "tail": {
+   "n": 16,
+   "amb": 1
+  },
+  "whswap": {
+   "n": 21,
+   "amb": 0
+  },
+  "topic": {
+   "n": 6,
+   "amb": 0
+  }
+ },
+ "items": [
+  {
+   "q": "Q28",
+   "section": "军训安排",
+   "title": "Q28. 军训一般多长时间？从几号到几号？\n",
+   "variants": [
     {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q1",
-      "title": "## Q1. 报到时间是哪几天？具体几点到几点？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "报到时间"
-        },
-        {
-          "axis": "错别字",
-          "question": "报倒时间是哪几天"
-        },
-        {
-          "axis": "倒装",
-          "question": "哪几天报到"
-        },
-        {
-          "axis": "否定式",
-          "question": "报到时间是不固定的吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "入学登记是哪几天"
-        }
-      ]
+     "id": "Q28-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "军训一般多长时间？",
+     "expect": "Q28",
+     "section": "军训安排",
+     "residual": "军训一般多长时间",
+     "ambiguous": false,
+     "colliders": []
     },
     {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q2",
-      "title": "## Q2. 报到地点在哪里？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "报到地点"
-        },
-        {
-          "axis": "错别字",
-          "question": "报到地点再哪里"
-        },
-        {
-          "axis": "倒装",
-          "question": "在哪里报到"
-        },
-        {
-          "axis": "否定式",
-          "question": "报到地点没变吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "办理入学手续在什么地方"
-        }
-      ]
+     "id": "Q28-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问军训一般多长时间？",
+     "expect": "Q28",
+     "section": "军训安排",
+     "residual": "军训一般多长时间",
+     "ambiguous": false,
+     "colliders": []
     },
     {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q3",
-      "title": "## Q3. 需要带哪些材料？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "带什么材料"
-        },
-        {
-          "axis": "错别字",
-          "question": "需要带哪些料材"
-        },
-        {
-          "axis": "倒装",
-          "question": "材料要带哪些"
-        },
-        {
-          "axis": "否定式",
-          "question": "报到是不是不用带东西"
-        },
-        {
-          "axis": "近义换词",
-          "question": "入学要准备什么证件"
-        }
-      ]
+     "id": "Q28-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "军训一般多长时间",
+     "expect": "Q28",
+     "section": "军训安排",
+     "residual": "军训一般多长时间",
+     "ambiguous": false,
+     "colliders": []
     },
     {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q4",
-      "title": "## Q4. 团员关系怎么转？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "团员关系转接"
-        },
-        {
-          "axis": "错别字",
-          "question": "团员关系怎么砖"
-        },
-        {
-          "axis": "倒装",
-          "question": "怎么转团员关系"
-        },
-        {
-          "axis": "否定式",
-          "question": "团员关系不用转吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "团组织关系转到哪里"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q5",
-      "title": "## Q5. 家长可以陪同进校吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "家长陪同"
-        },
-        {
-          "axis": "错别字",
-          "question": "家长可以陪同近校吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "陪同进校家长可以吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "家长不能进校吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "爸妈能送我进宿舍吗"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q6",
-      "title": "## Q6. 报到当天有人接站吗？车站时间安排？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "接站"
-        },
-        {
-          "axis": "错别字",
-          "question": "报到当天有人接战吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "车站有没有接站的"
-        },
-        {
-          "axis": "否定式",
-          "question": "没有接站的车吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "火车站有迎新志愿者吗"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q7",
-      "title": "## Q7. 报到流程是怎样的？先做什么后做什么？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "报到流程"
-        },
-        {
-          "axis": "错别字",
-          "question": "报到流成是怎样"
-        },
-        {
-          "axis": "倒装",
-          "question": "流程是怎样的，报到时"
-        },
-        {
-          "axis": "否定式",
-          "question": "报到是不是直接去寝室"
-        },
-        {
-          "axis": "近义换词",
-          "question": "入学手续办理顺序是什么"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q8",
-      "title": "## Q8. 报到时要体检吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "报到体检"
-        },
-        {
-          "axis": "错别字",
-          "question": "报到时要体剑吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "是不是要体检，报到时"
-        },
-        {
-          "axis": "否定式",
-          "question": "报到不用体检吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "入学检查身体吗"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q9",
-      "title": "## Q9. 照片要带几张？什么底色？几寸的？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "带几张照片"
-        },
-        {
-          "axis": "错别字",
-          "question": "照片要带急张"
-        },
-        {
-          "axis": "倒装",
-          "question": "几张照片要带"
-        },
-        {
-          "axis": "否定式",
-          "question": "照片不用带吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "证件照准备几寸的"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q10",
-      "title": "## Q10. 助学贷款怎么办理？报到时能现场办吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "助学贷款"
-        },
-        {
-          "axis": "错别字",
-          "question": "助学贷宽怎么办理"
-        },
-        {
-          "axis": "倒装",
-          "question": "贷款怎么办理，现场能办吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "学校不能现场办贷款吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "生源地信用贷怎么办"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q11",
-      "title": "## Q11. 分班分宿舍结果在哪里查？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "分班结果"
-        },
-        {
-          "axis": "错别字",
-          "question": "分班分宿舍结处在哪儿"
-        },
-        {
-          "axis": "倒装",
-          "question": "在哪里查分班"
-        },
-        {
-          "axis": "否定式",
-          "question": "分班结果不另行通知吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "宿舍分配名单哪里看"
-        }
-      ]
-    },
-    {
-      "rowId": 19,
-      "section": "报到须知",
-      "q": "Q12",
-      "title": "## Q12. 学校的具体地址、快递填写地址和导航定位是什么？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "学校地址"
-        },
-        {
-          "axis": "错别字",
-          "question": "学校的具体低址"
-        },
-        {
-          "axis": "倒装",
-          "question": "地址是什么，学校的"
-        },
-        {
-          "axis": "否定式",
-          "question": "快递不写学校名吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "邮寄地址怎么填"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q13",
-      "title": "## Q13. 宿舍是几人间？有独立卫浴吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "几人间"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍是几人艰"
-        },
-        {
-          "axis": "倒装",
-          "question": "宿舍几个人住一间"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍不是四人间吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "住几个人，有厕所吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q14",
-      "title": "## Q14. 宿舍有空调吗？有风扇吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍空调"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍有空调马"
-        },
-        {
-          "axis": "倒装",
-          "question": "空调宿舍有吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没空调吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "房间有电扇和冷气吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q15",
-      "title": "## Q15. 宿舍床位是学校分配还是自己选？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "床位分配"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍床味是学校分吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "床位是自己选还是学校分"
-        },
-        {
-          "axis": "否定式",
-          "question": "床位不能自己挑吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "铺位是怎么定的"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q16",
-      "title": "## Q16. 宿舍里有衣柜吗？多大？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "衣柜"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍有衣贵吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "衣柜宿舍里有吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没有柜子吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "有放衣服的柜子吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q17",
-      "title": "## Q17. 宿舍可以自己装饰吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍装饰"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍可以自己装试吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "装饰宿舍可以自己弄吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍不许自己布置吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "能挂床帘吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q18",
-      "title": "## Q18. 宿舍有洗衣机吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "洗衣机"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍有洗依机吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "洗衣机有吗，宿舍"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没有洗衣机吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "衣服在哪儿洗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q19",
-      "title": "## Q19. 宿舍有热水/饮用水吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍热水"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍有开谁吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "热水宿舍有吧"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没热水吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "喝水怎么办"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q20",
-      "title": "## Q20. 宿舍晚上断电吗？断网吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍断电"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍晚上断点吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "晚上宿舍会停电吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍不断电吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "夜里会关网吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q21",
-      "title": "## Q21. 宿舍门禁是几点？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍门禁"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍门禁事几点"
-        },
-        {
-          "axis": "倒装",
-          "question": "几点门禁"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没有门禁吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "晚上几点锁楼"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q22",
-      "title": "## Q22. 宿舍可以用大功率电器吗？电吹风能用吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "大功率电器"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍可以用大功率电器马"
-        },
-        {
-          "axis": "倒装",
-          "question": "吹风机能在宿舍用吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍不能用电锅吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "卷发棒能用吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q23",
-      "title": "## Q23. 宿舍有桌子吗？是上床下桌还是上下铺？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "上床下桌吗"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍有卓子吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "桌子宿舍里有吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍不是上下铺吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "是几连桌"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q24",
-      "title": "## Q24. 宿舍需要自带被褥吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "自带被褥"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍需要自带被付吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "被褥要自己带吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "被褥不用自己带吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "床单被子学校发吗"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q25",
-      "title": "## Q25. 宿舍室友是同专业的吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "室友同专业吗"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍室友是同专叶的吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "同专业的室友吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "室友不是一个班的吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "舍友怎么分配的"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q26",
-      "title": "## Q26. 宿舍插座问题？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "宿舍插座"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍察座问题"
-        },
-        {
-          "axis": "倒装",
-          "question": "插座宿舍有吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "宿舍没有插座吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "充电口在哪儿"
-        }
-      ]
-    },
-    {
-      "rowId": 18,
-      "section": "宿舍生活",
-      "q": "Q27",
-      "title": "## Q27. 宿舍床多大？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "床多大"
-        },
-        {
-          "axis": "错别字",
-          "question": "宿舍床多打"
-        },
-        {
-          "axis": "倒装",
-          "question": "多大的床"
-        },
-        {
-          "axis": "否定式",
-          "question": "床不足一米二吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "床尺寸是多少"
-        }
-      ]
-    },
-    {
-      "rowId": 17,
-      "section": "军训安排",
-      "q": "Q28",
-      "title": "## Q28. 军训一般多长时间？从几号到几号？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "军训时间"
-        },
-        {
-          "axis": "错别字",
-          "question": "军训一般多长时问"
-        },
-        {
-          "axis": "倒装",
-          "question": "几号到几号军训"
-        },
-        {
-          "axis": "否定式",
-          "question": "军训不用一个月吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "训期多长"
-        }
-      ]
-    },
-    {
-      "rowId": 17,
-      "section": "军训安排",
-      "q": "Q29",
-      "title": "## Q29. 军训鞋子是统一的吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "军训鞋"
-        },
-        {
-          "axis": "错别字",
-          "question": "军训鞋子是统一地吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "鞋子是统一的吗，军训"
-        },
-        {
-          "axis": "否定式",
-          "question": "军训鞋不用自己买吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "训练穿什么鞋"
-        }
-      ]
-    },
-    {
-      "rowId": 17,
-      "section": "军训安排",
-      "q": "Q30",
-      "title": "## Q30. 什么情况可以免训？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "免训"
-        },
-        {
-          "axis": "错别字",
-          "question": "什么情况可以免驯"
-        },
-        {
-          "axis": "倒装",
-          "question": "免训需要什么条件"
-        },
-        {
-          "axis": "否定式",
-          "question": "不想参加军训可以吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "身体不好能缓训吗"
-        }
-      ]
-    },
-    {
-      "rowId": 21,
-      "section": "食堂餐饮",
-      "q": "Q31",
-      "title": "## Q31. 学校有几个食堂？分别在哪里？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "几个食堂"
-        },
-        {
-          "axis": "错别字",
-          "question": "学校有几个食糖"
-        },
-        {
-          "axis": "倒装",
-          "question": "食堂有几个，在哪"
-        },
-        {
-          "axis": "否定式",
-          "question": "学校不止一个食堂吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "饭堂在哪儿"
-        }
-      ]
-    },
-    {
-      "rowId": 21,
-      "section": "食堂餐饮",
-      "q": "Q32",
-      "title": "## Q32. 食堂饭菜价格怎么样？一顿饭大概多少钱？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "食堂价格"
-        },
-        {
-          "axis": "错别字",
-          "question": "食堂饭菜价铬怎么样"
-        },
-        {
-          "axis": "倒装",
-          "question": "多少钱一顿，食堂"
-        },
-        {
-          "axis": "否定式",
-          "question": "食堂不贵吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "一顿午饭花多少"
-        }
-      ]
-    },
-    {
-      "rowId": 21,
-      "section": "食堂餐饮",
-      "q": "Q33",
-      "title": "## Q33. 学校外面有吃的吗？外卖能进校园吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "外卖能进校吗"
-        },
-        {
-          "axis": "错别字",
-          "question": "学校外面有吃的马"
-        },
-        {
-          "axis": "倒装",
-          "question": "进校园可以吗，外卖"
-        },
-        {
-          "axis": "否定式",
-          "question": "校外没吃的吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "门口有小吃店吗"
-        }
-      ]
-    },
-    {
-      "rowId": 21,
-      "section": "食堂餐饮",
-      "q": "Q34",
-      "title": "## Q34. 食堂有奶茶店吗？有咖啡店吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "奶茶店"
-        },
-        {
-          "axis": "错别字",
-          "question": "食堂有奶荼店吗"
-        },
-        {
-          "axis": "倒装",
-          "question": "咖啡店食堂有吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "食堂没有奶茶吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "有瑞幸吗"
-        }
-      ]
-    },
-    {
-      "rowId": 21,
-      "section": "食堂餐饮",
-      "q": "Q35",
-      "title": "## Q35. 食堂有水果卖吗？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "食堂水果"
-        },
-        {
-          "axis": "错别字",
-          "question": "食堂有水果卖马"
-        },
-        {
-          "axis": "倒装",
-          "question": "水果食堂有卖吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "食堂买不到水果吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "哪儿能买水果捞"
-        }
-      ]
-    },
-    {
-      "rowId": 20,
-      "section": "缴费与银行卡",
-      "q": "Q36",
-      "title": "## Q36. 住宿费用多少？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "住宿费"
-        },
-        {
-          "axis": "错别字",
-          "question": "住宿飞用多少"
-        },
-        {
-          "axis": "倒装",
-          "question": "多少住宿费"
-        },
-        {
-          "axis": "否定式",
-          "question": "住宿费不用交吧"
-        },
-        {
-          "axis": "近义换词",
-          "question": "住一年多少钱"
-        }
-      ]
-    },
-    {
-      "rowId": 20,
-      "section": "缴费与银行卡",
-      "q": "Q37",
-      "title": "## Q37. 学校是否只用中国银行的卡？",
-      "variants": [
-        {
-          "axis": "简称",
-          "question": "中行的卡"
-        },
-        {
-          "axis": "错别字",
-          "question": "学校是否只用中国银形的卡"
-        },
-        {
-          "axis": "倒装",
-          "question": "银行卡是学校统一办吗"
-        },
-        {
-          "axis": "否定式",
-          "question": "不办中行的卡行吗"
-        },
-        {
-          "axis": "近义换词",
-          "question": "缴费用哪家银行"
-        }
-      ]
+     "id": "Q28-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "从几号到几号？",
+     "expect": "Q28",
+     "section": "军训安排",
+     "residual": "从几号到几号",
+     "ambiguous": false,
+     "colliders": []
     }
-  ]
+   ]
+  },
+  {
+   "q": "Q29",
+   "section": "军训安排",
+   "title": "Q29. 军训鞋子是统一的吗？\n",
+   "variants": [
+    {
+     "id": "Q29-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "军训鞋子是统一的吗？",
+     "expect": "Q29",
+     "section": "军训安排",
+     "residual": "军训鞋子统一",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q29-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问军训鞋子是统一的吗？",
+     "expect": "Q29",
+     "section": "军训安排",
+     "residual": "军训鞋子统一",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q29-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "军训鞋子是统一的",
+     "expect": "Q29",
+     "section": "军训安排",
+     "residual": "军训鞋子统一",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q29-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "军训鞋子是统一的不？",
+     "expect": "Q29",
+     "section": "军训安排",
+     "residual": "军训鞋子统一不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q30",
+   "section": "军训安排",
+   "title": "Q30. 什么情况可以免训？\n",
+   "variants": [
+    {
+     "id": "Q30-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "什么情况可以免训？",
+     "expect": "Q30",
+     "section": "军训安排",
+     "residual": "情况可以免训",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q30-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问什么情况可以免训？",
+     "expect": "Q30",
+     "section": "军训安排",
+     "residual": "情况可以免训",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q30-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "什么情况可以免训",
+     "expect": "Q30",
+     "section": "军训安排",
+     "residual": "情况可以免训",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q13",
+   "section": "宿舍生活",
+   "title": "Q13. 宿舍是几人间？有独立卫浴吗？\n",
+   "variants": [
+    {
+     "id": "Q13-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍是几人间？",
+     "expect": "Q13",
+     "section": "宿舍生活",
+     "residual": "宿舍几人间",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q13-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍是几人间？",
+     "expect": "Q13",
+     "section": "宿舍生活",
+     "residual": "宿舍几人间",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q13-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍是几人间",
+     "expect": "Q13",
+     "section": "宿舍生活",
+     "residual": "宿舍几人间",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q13-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "有独立卫浴吗？",
+     "expect": "Q13",
+     "section": "宿舍生活",
+     "residual": "独立卫浴",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q14",
+   "section": "宿舍生活",
+   "title": "Q14. 宿舍有空调吗？有风扇吗？\n",
+   "variants": [
+    {
+     "id": "Q14-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍有空调吗？",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "宿舍空调",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q14-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍有空调吗？",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "宿舍空调",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q14-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍有空调",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "宿舍空调",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q14-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "有风扇吗？",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "风扇",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q14-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍有空调不？",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "宿舍空调不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q14-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "宿舍空调",
+     "expect": "Q14",
+     "section": "宿舍生活",
+     "residual": "宿舍空调",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q15",
+   "section": "宿舍生活",
+   "title": "Q15. 宿舍床位是学校分配还是自己选？\n",
+   "variants": [
+    {
+     "id": "Q15-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍床位是学校分配还是自己选？",
+     "expect": "Q15",
+     "section": "宿舍生活",
+     "residual": "宿舍床位学校分配自己选",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q15-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍床位是学校分配还是自己选？",
+     "expect": "Q15",
+     "section": "宿舍生活",
+     "residual": "宿舍床位学校分配自己选",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q15-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍床位是学校分配还是自己选",
+     "expect": "Q15",
+     "section": "宿舍生活",
+     "residual": "宿舍床位学校分配自己选",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q16",
+   "section": "宿舍生活",
+   "title": "Q16. 宿舍里有衣柜吗？多大？\n",
+   "variants": [
+    {
+     "id": "Q16-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍里有衣柜吗？",
+     "expect": "Q16",
+     "section": "宿舍生活",
+     "residual": "宿舍里衣柜",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q16-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍里有衣柜吗？",
+     "expect": "Q16",
+     "section": "宿舍生活",
+     "residual": "宿舍里衣柜",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q16-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍里有衣柜",
+     "expect": "Q16",
+     "section": "宿舍生活",
+     "residual": "宿舍里衣柜",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q16-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "多大？",
+     "expect": "Q16",
+     "section": "宿舍生活",
+     "residual": "多大",
+     "ambiguous": true,
+     "colliders": [
+      "Q27"
+     ]
+    },
+    {
+     "id": "Q16-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍里有衣柜不？",
+     "expect": "Q16",
+     "section": "宿舍生活",
+     "residual": "宿舍里衣柜不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q17",
+   "section": "宿舍生活",
+   "title": "Q17. 宿舍可以自己装饰吗？\n",
+   "variants": [
+    {
+     "id": "Q17-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍可以自己装饰吗？",
+     "expect": "Q17",
+     "section": "宿舍生活",
+     "residual": "宿舍可以自己装饰",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q17-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍可以自己装饰吗？",
+     "expect": "Q17",
+     "section": "宿舍生活",
+     "residual": "宿舍可以自己装饰",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q17-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍可以自己装饰",
+     "expect": "Q17",
+     "section": "宿舍生活",
+     "residual": "宿舍可以自己装饰",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q17-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍可以自己装饰不？",
+     "expect": "Q17",
+     "section": "宿舍生活",
+     "residual": "宿舍可以自己装饰不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q18",
+   "section": "宿舍生活",
+   "title": "Q18. 宿舍有洗衣机吗？\n",
+   "variants": [
+    {
+     "id": "Q18-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍有洗衣机吗？",
+     "expect": "Q18",
+     "section": "宿舍生活",
+     "residual": "宿舍洗衣机",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q18-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍有洗衣机吗？",
+     "expect": "Q18",
+     "section": "宿舍生活",
+     "residual": "宿舍洗衣机",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q18-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍有洗衣机",
+     "expect": "Q18",
+     "section": "宿舍生活",
+     "residual": "宿舍洗衣机",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q18-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍有洗衣机不？",
+     "expect": "Q18",
+     "section": "宿舍生活",
+     "residual": "宿舍洗衣机不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q18-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "宿舍洗衣机",
+     "expect": "Q18",
+     "section": "宿舍生活",
+     "residual": "宿舍洗衣机",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q19",
+   "section": "宿舍生活",
+   "title": "Q19. 宿舍有热水/饮用水吗？\n",
+   "variants": [
+    {
+     "id": "Q19-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍有热水/饮用水吗？",
+     "expect": "Q19",
+     "section": "宿舍生活",
+     "residual": "宿舍热水饮用水",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q19-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍有热水/饮用水吗？",
+     "expect": "Q19",
+     "section": "宿舍生活",
+     "residual": "宿舍热水饮用水",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q19-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍有热水/饮用水",
+     "expect": "Q19",
+     "section": "宿舍生活",
+     "residual": "宿舍热水饮用水",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q19-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍有热水/饮用水不？",
+     "expect": "Q19",
+     "section": "宿舍生活",
+     "residual": "宿舍热水饮用水不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q19-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "宿舍热水/饮用水",
+     "expect": "Q19",
+     "section": "宿舍生活",
+     "residual": "宿舍热水饮用水",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q20",
+   "section": "宿舍生活",
+   "title": "Q20. 宿舍晚上断电吗？断网吗？\n",
+   "variants": [
+    {
+     "id": "Q20-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍晚上断电吗？",
+     "expect": "Q20",
+     "section": "宿舍生活",
+     "residual": "宿舍晚断电",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q20-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍晚上断电吗？",
+     "expect": "Q20",
+     "section": "宿舍生活",
+     "residual": "宿舍晚断电",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q20-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍晚上断电",
+     "expect": "Q20",
+     "section": "宿舍生活",
+     "residual": "宿舍晚断电",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q20-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "断网吗？",
+     "expect": "Q20",
+     "section": "宿舍生活",
+     "residual": "断网",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q20-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍晚上断电不？",
+     "expect": "Q20",
+     "section": "宿舍生活",
+     "residual": "宿舍晚断电不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q21",
+   "section": "宿舍生活",
+   "title": "Q21. 宿舍门禁是几点？\n",
+   "variants": [
+    {
+     "id": "Q21-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍门禁是几点？",
+     "expect": "Q21",
+     "section": "宿舍生活",
+     "residual": "宿舍门禁",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q21-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍门禁是几点？",
+     "expect": "Q21",
+     "section": "宿舍生活",
+     "residual": "宿舍门禁",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q21-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍门禁是几点",
+     "expect": "Q21",
+     "section": "宿舍生活",
+     "residual": "宿舍门禁",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q21-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍门禁是什么时候？",
+     "expect": "Q21",
+     "section": "宿舍生活",
+     "residual": "宿舍门禁时候",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q22",
+   "section": "宿舍生活",
+   "title": "Q22. 宿舍可以用大功率电器吗？电吹风能用吗？\n",
+   "variants": [
+    {
+     "id": "Q22-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍可以用大功率电器吗？",
+     "expect": "Q22",
+     "section": "宿舍生活",
+     "residual": "宿舍可以用大功率电器",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q22-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍可以用大功率电器吗？",
+     "expect": "Q22",
+     "section": "宿舍生活",
+     "residual": "宿舍可以用大功率电器",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q22-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍可以用大功率电器",
+     "expect": "Q22",
+     "section": "宿舍生活",
+     "residual": "宿舍可以用大功率电器",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q22-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "电吹风能用吗？",
+     "expect": "Q22",
+     "section": "宿舍生活",
+     "residual": "电吹风能用",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q22-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍可以用大功率电器不？",
+     "expect": "Q22",
+     "section": "宿舍生活",
+     "residual": "宿舍可以用大功率电器不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q23",
+   "section": "宿舍生活",
+   "title": "Q23. 宿舍有桌子吗？是上床下桌还是上下铺？\n",
+   "variants": [
+    {
+     "id": "Q23-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍有桌子吗？",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "宿舍桌子",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q23-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍有桌子吗？",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "宿舍桌子",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q23-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍有桌子",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "宿舍桌子",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q23-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "是上床下桌还是上下铺？",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "床桌铺",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q23-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍有桌子不？",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "宿舍桌子不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q23-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "宿舍桌子",
+     "expect": "Q23",
+     "section": "宿舍生活",
+     "residual": "宿舍桌子",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q24",
+   "section": "宿舍生活",
+   "title": "Q24. 宿舍需要自带被褥吗？\n",
+   "variants": [
+    {
+     "id": "Q24-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍需要自带被褥吗？",
+     "expect": "Q24",
+     "section": "宿舍生活",
+     "residual": "宿舍需要自带被褥",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q24-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍需要自带被褥吗？",
+     "expect": "Q24",
+     "section": "宿舍生活",
+     "residual": "宿舍需要自带被褥",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q24-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍需要自带被褥",
+     "expect": "Q24",
+     "section": "宿舍生活",
+     "residual": "宿舍需要自带被褥",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q24-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍需要自带被褥不？",
+     "expect": "Q24",
+     "section": "宿舍生活",
+     "residual": "宿舍需要自带被褥不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q25",
+   "section": "宿舍生活",
+   "title": "Q25. 宿舍室友是同专业的吗？\n",
+   "variants": [
+    {
+     "id": "Q25-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍室友是同专业的吗？",
+     "expect": "Q25",
+     "section": "宿舍生活",
+     "residual": "宿舍室友同专业",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q25-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍室友是同专业的吗？",
+     "expect": "Q25",
+     "section": "宿舍生活",
+     "residual": "宿舍室友同专业",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q25-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍室友是同专业的",
+     "expect": "Q25",
+     "section": "宿舍生活",
+     "residual": "宿舍室友同专业",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q25-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "宿舍室友是同专业的不？",
+     "expect": "Q25",
+     "section": "宿舍生活",
+     "residual": "宿舍室友同专业不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q26",
+   "section": "宿舍生活",
+   "title": "Q26. 宿舍插座问题？\n",
+   "variants": [
+    {
+     "id": "Q26-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍插座问题？",
+     "expect": "Q26",
+     "section": "宿舍生活",
+     "residual": "宿舍插座问题",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q26-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍插座问题？",
+     "expect": "Q26",
+     "section": "宿舍生活",
+     "residual": "宿舍插座问题",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q26-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍插座问题",
+     "expect": "Q26",
+     "section": "宿舍生活",
+     "residual": "宿舍插座问题",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q27",
+   "section": "宿舍生活",
+   "title": "Q27. 宿舍床多大？\n",
+   "variants": [
+    {
+     "id": "Q27-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍床多大？",
+     "expect": "Q27",
+     "section": "宿舍生活",
+     "residual": "宿舍床多大",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q27-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍床多大？",
+     "expect": "Q27",
+     "section": "宿舍生活",
+     "residual": "宿舍床多大",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q27-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍床多大",
+     "expect": "Q27",
+     "section": "宿舍生活",
+     "residual": "宿舍床多大",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q1",
+   "section": "报到须知",
+   "title": "Q1. 报到时间是哪几天？具体几点到几点？\n",
+   "variants": [
+    {
+     "id": "Q1-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "报到时间是哪几天？",
+     "expect": "Q1",
+     "section": "报到须知",
+     "residual": "报到时间哪几天",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q1-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问报到时间是哪几天？",
+     "expect": "Q1",
+     "section": "报到须知",
+     "residual": "报到时间哪几天",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q1-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "报到时间是哪几天",
+     "expect": "Q1",
+     "section": "报到须知",
+     "residual": "报到时间哪几天",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q1-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "具体几点到几点？",
+     "expect": "Q1",
+     "section": "报到须知",
+     "residual": "具体到",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q2",
+   "section": "报到须知",
+   "title": "Q2. 报到地点在哪里？\n",
+   "variants": [
+    {
+     "id": "Q2-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "报到地点在哪里？",
+     "expect": "Q2",
+     "section": "报到须知",
+     "residual": "报到地点",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q2-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问报到地点在哪里？",
+     "expect": "Q2",
+     "section": "报到须知",
+     "residual": "报到地点",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q2-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "报到地点在哪里",
+     "expect": "Q2",
+     "section": "报到须知",
+     "residual": "报到地点",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q3",
+   "section": "报到须知",
+   "title": "Q3. 需要带哪些材料？\n",
+   "variants": [
+    {
+     "id": "Q3-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "需要带哪些材料？",
+     "expect": "Q3",
+     "section": "报到须知",
+     "residual": "需要带哪材料",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q3-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问需要带哪些材料？",
+     "expect": "Q3",
+     "section": "报到须知",
+     "residual": "需要带哪材料",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q3-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "需要带哪些材料",
+     "expect": "Q3",
+     "section": "报到须知",
+     "residual": "需要带哪材料",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q4",
+   "section": "报到须知",
+   "title": "Q4. 团员关系怎么转？\n",
+   "variants": [
+    {
+     "id": "Q4-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "团员关系怎么转？",
+     "expect": "Q4",
+     "section": "报到须知",
+     "residual": "团员关系转",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q4-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问团员关系怎么转？",
+     "expect": "Q4",
+     "section": "报到须知",
+     "residual": "团员关系转",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q4-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "团员关系怎么转",
+     "expect": "Q4",
+     "section": "报到须知",
+     "residual": "团员关系转",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q4-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "团员关系如何转？",
+     "expect": "Q4",
+     "section": "报到须知",
+     "residual": "团员关系转",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q5",
+   "section": "报到须知",
+   "title": "Q5. 家长可以陪同进校吗？\n",
+   "variants": [
+    {
+     "id": "Q5-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "家长可以陪同进校吗？",
+     "expect": "Q5",
+     "section": "报到须知",
+     "residual": "家长可以陪同进校",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q5-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问家长可以陪同进校吗？",
+     "expect": "Q5",
+     "section": "报到须知",
+     "residual": "家长可以陪同进校",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q5-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "家长可以陪同进校",
+     "expect": "Q5",
+     "section": "报到须知",
+     "residual": "家长可以陪同进校",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q5-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "家长可以陪同进校不？",
+     "expect": "Q5",
+     "section": "报到须知",
+     "residual": "家长可以陪同进校不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q6",
+   "section": "报到须知",
+   "title": "Q6. 报到当天有人接站吗？车站时间安排？\n",
+   "variants": [
+    {
+     "id": "Q6-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "报到当天有人接站吗？",
+     "expect": "Q6",
+     "section": "报到须知",
+     "residual": "报到当天人接站",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q6-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问报到当天有人接站吗？",
+     "expect": "Q6",
+     "section": "报到须知",
+     "residual": "报到当天人接站",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q6-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "报到当天有人接站",
+     "expect": "Q6",
+     "section": "报到须知",
+     "residual": "报到当天人接站",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q6-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "车站时间安排？",
+     "expect": "Q6",
+     "section": "报到须知",
+     "residual": "车站时间安排",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q6-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "报到当天有人接站不？",
+     "expect": "Q6",
+     "section": "报到须知",
+     "residual": "报到当天人接站不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q7",
+   "section": "报到须知",
+   "title": "Q7. 报到流程是怎样的？先做什么后做什么？\n",
+   "variants": [
+    {
+     "id": "Q7-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "报到流程是怎样的？",
+     "expect": "Q7",
+     "section": "报到须知",
+     "residual": "报到流程怎样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q7-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问报到流程是怎样的？",
+     "expect": "Q7",
+     "section": "报到须知",
+     "residual": "报到流程怎样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q7-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "报到流程是怎样的",
+     "expect": "Q7",
+     "section": "报到须知",
+     "residual": "报到流程怎样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q7-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "先做什么后做什么？",
+     "expect": "Q7",
+     "section": "报到须知",
+     "residual": "先做后做",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q8",
+   "section": "报到须知",
+   "title": "Q8. 报到时要体检吗？\n",
+   "variants": [
+    {
+     "id": "Q8-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "报到时要体检吗？",
+     "expect": "Q8",
+     "section": "报到须知",
+     "residual": "报到时要体检",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q8-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问报到时要体检吗？",
+     "expect": "Q8",
+     "section": "报到须知",
+     "residual": "报到时要体检",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q8-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "报到时要体检",
+     "expect": "Q8",
+     "section": "报到须知",
+     "residual": "报到时要体检",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q8-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "报到时要体检不？",
+     "expect": "Q8",
+     "section": "报到须知",
+     "residual": "报到时要体检不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q9",
+   "section": "报到须知",
+   "title": "Q9. 照片要带几张？什么底色？几寸的？\n",
+   "variants": [
+    {
+     "id": "Q9-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "照片要带几张？",
+     "expect": "Q9",
+     "section": "报到须知",
+     "residual": "照片要带几张",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q9-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问照片要带几张？",
+     "expect": "Q9",
+     "section": "报到须知",
+     "residual": "照片要带几张",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q9-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "照片要带几张",
+     "expect": "Q9",
+     "section": "报到须知",
+     "residual": "照片要带几张",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q9-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "几寸的？",
+     "expect": "Q9",
+     "section": "报到须知",
+     "residual": "几寸",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q10",
+   "section": "报到须知",
+   "title": "Q10. 助学贷款怎么办理？报到时能现场办吗？\n",
+   "variants": [
+    {
+     "id": "Q10-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "助学贷款怎么办理？",
+     "expect": "Q10",
+     "section": "报到须知",
+     "residual": "助学贷款办理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q10-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问助学贷款怎么办理？",
+     "expect": "Q10",
+     "section": "报到须知",
+     "residual": "助学贷款办理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q10-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "助学贷款怎么办理",
+     "expect": "Q10",
+     "section": "报到须知",
+     "residual": "助学贷款办理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q10-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "报到时能现场办吗？",
+     "expect": "Q10",
+     "section": "报到须知",
+     "residual": "报到时能现场办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q10-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "助学贷款如何办理？",
+     "expect": "Q10",
+     "section": "报到须知",
+     "residual": "助学贷款办理",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q11",
+   "section": "报到须知",
+   "title": "Q11. 分班分宿舍结果在哪里查？\n",
+   "variants": [
+    {
+     "id": "Q11-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "分班分宿舍结果在哪里查？",
+     "expect": "Q11",
+     "section": "报到须知",
+     "residual": "分班分宿舍结果查",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q11-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问分班分宿舍结果在哪里查？",
+     "expect": "Q11",
+     "section": "报到须知",
+     "residual": "分班分宿舍结果查",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q11-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "分班分宿舍结果在哪里查",
+     "expect": "Q11",
+     "section": "报到须知",
+     "residual": "分班分宿舍结果查",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q12",
+   "section": "报到须知",
+   "title": "Q12. 学校的具体地址、快递填写地址和导航定位是什么？\n",
+   "variants": [
+    {
+     "id": "Q12-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学校的具体地址、快递填写地址和导航定位是什么？",
+     "expect": "Q12",
+     "section": "报到须知",
+     "residual": "学校具体地址快递填写地址导航定位",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q12-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学校的具体地址、快递填写地址和导航定位是什么？",
+     "expect": "Q12",
+     "section": "报到须知",
+     "residual": "学校具体地址快递填写地址导航定位",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q12-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学校的具体地址、快递填写地址和导航定位是什么",
+     "expect": "Q12",
+     "section": "报到须知",
+     "residual": "学校具体地址快递填写地址导航定位",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q36",
+   "section": "缴费与银行卡",
+   "title": "Q36. 住宿费用多少？\n",
+   "variants": [
+    {
+     "id": "Q36-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "住宿费用多少？",
+     "expect": "Q36",
+     "section": "缴费与银行卡",
+     "residual": "住宿费用",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q36-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问住宿费用多少？",
+     "expect": "Q36",
+     "section": "缴费与银行卡",
+     "residual": "住宿费用",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q36-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "住宿费用多少",
+     "expect": "Q36",
+     "section": "缴费与银行卡",
+     "residual": "住宿费用",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q37",
+   "section": "缴费与银行卡",
+   "title": "Q37. 学校是否只用中国银行的卡？\n",
+   "variants": [
+    {
+     "id": "Q37-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学校是否只用中国银行的卡？",
+     "expect": "Q37",
+     "section": "缴费与银行卡",
+     "residual": "学校否用中国银行卡",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q37-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学校是否只用中国银行的卡？",
+     "expect": "Q37",
+     "section": "缴费与银行卡",
+     "residual": "学校否用中国银行卡",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q37-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学校是否只用中国银行的卡",
+     "expect": "Q37",
+     "section": "缴费与银行卡",
+     "residual": "学校否用中国银行卡",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q31",
+   "section": "食堂餐饮",
+   "title": "Q31. 学校有几个食堂？分别在哪里？\n",
+   "variants": [
+    {
+     "id": "Q31-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学校有几个食堂？",
+     "expect": "Q31",
+     "section": "食堂餐饮",
+     "residual": "学校几食堂",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q31-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学校有几个食堂？",
+     "expect": "Q31",
+     "section": "食堂餐饮",
+     "residual": "学校几食堂",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q31-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学校有几个食堂",
+     "expect": "Q31",
+     "section": "食堂餐饮",
+     "residual": "学校几食堂",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q31-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "分别在哪里？",
+     "expect": "Q31",
+     "section": "食堂餐饮",
+     "residual": "分别",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q32",
+   "section": "食堂餐饮",
+   "title": "Q32. 食堂饭菜价格怎么样？一顿饭大概多少钱？\n",
+   "variants": [
+    {
+     "id": "Q32-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "食堂饭菜价格怎么样？",
+     "expect": "Q32",
+     "section": "食堂餐饮",
+     "residual": "食堂饭菜价格样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q32-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问食堂饭菜价格怎么样？",
+     "expect": "Q32",
+     "section": "食堂餐饮",
+     "residual": "食堂饭菜价格样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q32-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "食堂饭菜价格怎么样",
+     "expect": "Q32",
+     "section": "食堂餐饮",
+     "residual": "食堂饭菜价格样",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q32-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "一顿饭大概多少钱？",
+     "expect": "Q32",
+     "section": "食堂餐饮",
+     "residual": "一顿饭大概钱",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q32-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "食堂饭菜价格如何样？",
+     "expect": "Q32",
+     "section": "食堂餐饮",
+     "residual": "食堂饭菜价格样",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q33",
+   "section": "食堂餐饮",
+   "title": "Q33. 学校外面有吃的吗？外卖能进校园吗？\n",
+   "variants": [
+    {
+     "id": "Q33-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学校外面有吃的吗？",
+     "expect": "Q33",
+     "section": "食堂餐饮",
+     "residual": "学校外面吃",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q33-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学校外面有吃的吗？",
+     "expect": "Q33",
+     "section": "食堂餐饮",
+     "residual": "学校外面吃",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q33-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学校外面有吃的",
+     "expect": "Q33",
+     "section": "食堂餐饮",
+     "residual": "学校外面吃",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q33-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "外卖能进校园吗？",
+     "expect": "Q33",
+     "section": "食堂餐饮",
+     "residual": "外卖能进校园",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q33-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "学校外面有吃的不？",
+     "expect": "Q33",
+     "section": "食堂餐饮",
+     "residual": "学校外面吃不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q34",
+   "section": "食堂餐饮",
+   "title": "Q34. 食堂有奶茶店吗？有咖啡店吗？\n",
+   "variants": [
+    {
+     "id": "Q34-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "食堂有奶茶店吗？",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "食堂奶茶店",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q34-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问食堂有奶茶店吗？",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "食堂奶茶店",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q34-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "食堂有奶茶店",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "食堂奶茶店",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q34-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "有咖啡店吗？",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "咖啡店",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q34-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "食堂有奶茶店不？",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "食堂奶茶店不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q34-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "食堂奶茶店",
+     "expect": "Q34",
+     "section": "食堂餐饮",
+     "residual": "食堂奶茶店",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q35",
+   "section": "食堂餐饮",
+   "title": "Q35. 食堂有水果卖吗？\n",
+   "variants": [
+    {
+     "id": "Q35-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "食堂有水果卖吗？",
+     "expect": "Q35",
+     "section": "食堂餐饮",
+     "residual": "食堂水果卖",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q35-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问食堂有水果卖吗？",
+     "expect": "Q35",
+     "section": "食堂餐饮",
+     "residual": "食堂水果卖",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q35-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "食堂有水果卖",
+     "expect": "Q35",
+     "section": "食堂餐饮",
+     "residual": "食堂水果卖",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q35-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "食堂有水果卖不？",
+     "expect": "Q35",
+     "section": "食堂餐饮",
+     "residual": "食堂水果卖不",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q35-topic",
+     "axis": "topic",
+     "rule": "topic",
+     "question": "食堂水果卖",
+     "expect": "Q35",
+     "section": "食堂餐饮",
+     "residual": "食堂水果卖",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  }
+ ]
 }

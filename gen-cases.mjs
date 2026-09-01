@@ -1,17 +1,22 @@
 // 生成 cases.gen.json —— 从知识库现存的 37 条 Q 标题，用**固定规则**机械派生口语变体。
-// 为什么要机械：规则可复现、可 diff、换文档自动跟随；模型改写的不可复现，所以那份另存
-// cases.llm.md 只做一次性体检，不进 CI 门禁。
+// 规则可复现、可 diff、换文档自动跟随，所以这份**就是基线**，占着 cases.gen.json 这个名字。
+// 模型手写的那 5 轴口语变体（简称/错别字/倒装/否定式/近义换词）不可复现，另存 `cases.human.json`：
+// 两份各占一个文件名、永不互写，由 recall.mjs 合并读。（同目录同名互覆盖真丢过一次工作，别再犯。）
 //
 // 判定口径（与 recall.mjs 约定）：派生自 Qn 的变体，正解就是 Qn 本身。
 // 但有一条公平性前提——**变体必须在标题层唯一可辨**。若同一串残余关键词还落在别的条目标题里
 // （比如"宿舍""几点"这种满篇都是的词），那 top1 争不过去不算缺陷，标记 ambiguous 排除在门禁分母外。
 //
-// 用法：node gen-cases.mjs        # 写 cases.gen.json
+// 用法：node gen-cases.mjs        # 重写 cases.gen.json（产物入库，换文档时 diff 得出用例漂移）
 import { DatabaseSync } from 'node:sqlite';
 import { writeFileSync } from 'node:fs';
 
 const DB = process.env.KB_ASK_DB
   || '/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite';
+// 输出文件名固定 `cases.gen.json`（规则派生基线）。刻意**不**写 cases.human.json：
+// 那份是模型手写的，只能人工维护，脚本一旦同写就会把不可复现的那套覆盖掉。
+// 结构服从 recall.mjs 声明的契约（items[].{q,section,title,variants[].{axis,question}}），
+// 每个 variant 多带 id/expect/residual/ambiguous/colliders 五个诊断字段，供 recall 摘出歧义分母。
 const OUT = new URL('./cases.gen.json', import.meta.url).pathname;
 
 // —— 与 kb-ask.mjs 的 itemsOf()/titleOf() 同语义的解析（那两处未导出，这里刻意保持一致）——
@@ -66,13 +71,16 @@ function subQuestions(title) {
   return core.split(/[？?]/).map((s) => s.trim()).filter((s) => s.length >= 2);
 }
 
-const WH_SWAP = [['几点', '什么时候'], ['多少钱', '费用'], ['在哪', '在哪儿'], ['怎么', '如何'],
-  ['吗', '不'], ['几人', '几个人'], ['什么时候', '几点']];
-// 注意顺序敏感：先 几点→什么时候，末尾那条 什么时候→几点 只对不含"几点"的句子生效。
+const WH_SWAP = [['几点', '什么时候'], ['多少钱', '费用'], ['怎么', '如何'], ['吗', '不']];
+// 两条必须带否向前瞻，否则规则会生成**没人会打出来的错字串**，白扣门禁分（实测我自己那 3 个 miss）：
+//   在哪里 → 在哪儿里（Q2）  ·  几人间 → 几个人间（Q13）
+const GUARDED = [[/在哪(?!儿)(?![里处])/g, '在哪儿'], [/几人(?!个)(?!间)/g, '几个人']];
+// 注意顺序敏感：先 几点→什么时候，`什么时候→几点` 只对不含"几点"的句子生效。
 const swap = (s) => {
   let t = s;
   if (!/几点/.test(t)) t = t.replace(/什么时候/g, '几点');
-  for (const [a, b] of WH_SWAP) if (a !== '什么时候') t = t.split(a).join(b);
+  for (const [a, b] of WH_SWAP) t = t.split(a).join(b);
+  for (const [re, b] of GUARDED) t = t.replace(re, b);
   return t;
 };
 
@@ -99,11 +107,20 @@ for (const [i, it] of ITEMS.entries()) {
     if (residual.length < 2) { dropped++; continue; }
     const colliders = ITEMS.filter((o, j) => j !== i && TITLE_NORM[j].includes(residual)).map((o) => `Q${o.q}`);
     cases.push({
-      id: `Q${it.q}-${rule}`, q, expect: `Q${it.q}`, section: it.section, rule,
-      residual, ambiguous: colliders.length > 0, colliders,
+      // axis/question 是给 recall.mjs 读的契约字段；rule 与 axis 同值，留着只为老诊断脚本认得。
+      id: `Q${it.q}-${rule}`, axis: rule, rule, question: q, expect: `Q${it.q}`,
+      section: it.section, residual, ambiguous: colliders.length > 0, colliders,
     });
   }
 }
+
+// 按条目归组，服从 recall.mjs 的契约：items[].{q,section,title,variants[].{axis,question}}
+const byQ = new Map();
+for (const it of ITEMS) {
+  byQ.set(`Q${it.q}`, { q: `Q${it.q}`, section: it.section, title: it.title, variants: [] });
+}
+for (const c of cases) byQ.get(c.expect).variants.push(c);
+const items = [...byQ.values()].filter((it) => it.variants.length > 0);
 
 const byRule = {};
 for (const c of cases) {
@@ -113,16 +130,19 @@ for (const c of cases) {
 }
 
 const doc = {
-  generated_by: 'gen-cases.mjs',
+  generatedBy: 'gen-cases.mjs（规则机械派生，可复现、可 diff、换文档自动跟随）',
   db: DB.split('/').pop(),        // 只留文件名：这是要进公开仓的产物，不写本机绝对路径
-  items: ITEMS.length,
-  cases: cases.length,
+  category: '新生指南',
+  axes: Object.keys(byRule),
+  note: '与 cases.human.json（模型手写 5 轴）互补：这份量的是"改述后还认不认得"，那份量的是"口语化后漏不漏"。两份由 recall.mjs 合并读，永不互写。',
+  itemCount: items.length,
+  total: cases.length,
   ambiguous: cases.filter((c) => c.ambiguous).length,
   dropped,
-  per_rule: byRule,
-  list: cases,
+  perRule: byRule,
+  items,
 };
 writeFileSync(OUT, JSON.stringify(doc, null, 1));
-console.log(`items=${ITEMS.length} cases=${cases.length} ambiguous=${doc.ambiguous} dropped=${dropped}`);
+console.log(`items=${items.length} cases=${cases.length} ambiguous=${doc.ambiguous} dropped=${dropped}`);
 for (const [r, v] of Object.entries(byRule)) console.log(`  ${r.padEnd(7)} ${String(v.n).padStart(3)}  (歧义 ${v.amb})`);
 console.log('-> ' + OUT);

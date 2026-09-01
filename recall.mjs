@@ -1,12 +1,19 @@
-// 任务 1：文档自召回测试。
+// 任务 1：文档自召回测试 + 负例门禁。一个脚本回答两个问题：
+//   正例——「该答的答得上来吗」；负例——「不该答的一个都没答吗」。只测前者等于没测。
 //
-// cases.gen.json 里每个 Qn 条目配 5 个口语变体（由模型手写），这里逐条调 kb_ask，
-// 断言**返回引用里的 top1 必须是该条目**（比对（指南·章节 第N条 Qn）里的 Qn）。
+// 正例集**合并读两份**（刻意各占一个文件名、永不互写；同名互覆盖真丢过一次工作）：
+//   cases.gen.json    规则机械派生（`node gen-cases.mjs` 产物，可复现、可 diff、换文档自动跟随）→ 基线
+//   cases.human.json  模型手写 5 轴口语变体（简称/错别字/倒装/否定式/近义换词），不可复现 → 补充
+// 负例集：cases.neg.md（不带 ? 的每一条都是硬门禁，返回 ANSWER 即假阳性）。
+//
+// 断言口径：**返回引用里的 top1 必须是该条目**（比对（指南·章节 第N条 Qn）里的 Qn）。
 // 只看 ANSWER/REFUSE 不够——小库全量投喂下几乎什么都"能答"，正解没排第一就是答非所问。
+// 规则派生变体带 `ambiguous`（残余关键词还落在别条条目标题里）：那种 top1 争不过去不算缺陷，
+// 只报不判、排除在门禁分母外——否则分母被噪声污染，绿也就没意义了。
 //
-// 用法：node recall.mjs          # 汇总 + 全部 miss 清单
+// 用法：node recall.mjs          # 汇总 + miss 清单 + 负例结果
 //       node recall.mjs --json   # 另外输出机器可读 JSON（逐条结果，给诊断脚本用）
-// 退出码：有 miss → 1；全绿 → 0；用例集与库条目对不上 → 2。
+// 退出码：miss 或负例误放 → 1；全绿 → 0；用例集与库/契约对不上 → 2。
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -15,26 +22,84 @@ const TARGET = process.env.KB_ASK_TARGET === 'installed'
   : '/Users/mac/work-deepseek/kb/preset-kb-qa/kb-ask.mjs';
 const DB = process.env.KB_ASK_DB
   || '/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite';
-const CASES = new URL('./cases.gen.json', import.meta.url).pathname;
+const HERE = import.meta.url;
+const SOURCES = [
+  { file: new URL('./cases.gen.json', HERE).pathname, source: 'gen', why: '规则派生基线' },
+  { file: new URL('./cases.human.json', HERE).pathname, source: 'human', why: '模型手写口语变体' },
+];
+const NEG_FILE = new URL('./cases.neg.md', HERE).pathname;
+const REFUSAL = '该问题超出范围了，请联系管理员';
 
-const cfg = JSON.parse(readFileSync(CASES, 'utf8'));
-// 契约检查：cases.gen.json 必须是 {items:[{q,section,title,variants:[{axis,question}]}]}。
-// 这文件有两个来源（模型手写 5 型 / 规则机械派生）在同目录里互相覆盖过，schema 一对不上就当场炸，
-// 不要拿一份错格式的喂出假的 100%。
-if (!Array.isArray(cfg.items) || cfg.items.length === 0
-  || !Array.isArray(cfg.items[0]?.variants) || typeof cfg.items[0]?.q !== 'string'
-  || typeof cfg.items[0]?.section !== 'string') {
-  console.error(`cases.gen.json 结构不符合契约（要 items[].{q,section,variants[].{axis,question}}），`
-    + `实际顶层键=${Object.keys(cfg).join(',')}。多半是被别的生成器覆盖了，先确认再跑。`);
-  process.exit(2);
+const num = (q) => Number(String(q).replace(/^Q/i, ''));
+
+/** 契约：{items:[{q,section,title,variants:[{axis,question}]}]}。缺文件或结构不对都当场炸。 */
+function loadCases(file, source) {
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(file, 'utf8'));
+  } catch (e) {
+    // 少一份用例集 = 静默缩水覆盖率，正是丢工作那种失败模式，不许降级运行。
+    console.error(`${source} 用例集读不了（${file}）：${e.message}`);
+    console.error('两份正例集都必须存在：cases.gen.json 由 `node gen-cases.mjs` 重生成，'
+      + 'cases.human.json 只能人工维护。');
+    process.exit(2);
+  }
+  if (!Array.isArray(raw.items) || raw.items.length === 0
+    || !Array.isArray(raw.items[0]?.variants) || typeof raw.items[0]?.q !== 'string'
+    || typeof raw.items[0]?.section !== 'string') {
+    console.error(`${file} 结构不符合契约（要 items[].{q,section,variants[].{axis,question}}），`
+      + `实际顶层键=${Object.keys(raw).join(',')}。多半是被别的生成器覆盖了，先确认再跑。`);
+    process.exit(2);
+  }
+  for (const it of raw.items) {
+    for (const v of it.variants) {
+      if (typeof v?.question !== 'string' || v.question.trim() === ''
+        || typeof v?.axis !== 'string' || v.axis.trim() === '') {
+        console.error(`${file} 条目 ${it.q} 有 variant 缺 axis/question：${JSON.stringify(v)}`
+          + `（规则派生那份应由 gen-cases.mjs 重生成，别手改产物）`);
+        process.exit(2);
+      }
+    }
+  }
+  return raw;
 }
+
+// —— 合并：按 Qn 归组，变体按 (期望条目, 问句原文) 去重，重复的把来源并进 sources ——
+const merged = new Map();
+let category = null;
+for (const { file, source } of SOURCES) {
+  const raw = loadCases(file, source);
+  category ??= raw.category || '新生指南';
+  for (const it of raw.items) {
+    const key = String(it.q).toUpperCase();
+    if (!merged.has(key)) merged.set(key, { q: key, section: it.section, title: it.title, variants: [], seen: new Map() });
+    const box = merged.get(key);
+    for (const v of it.variants) {
+      const dk = v.question.replace(/\s+/g, '');
+      const dup = box.seen.get(dk);
+      if (dup) {
+        if (!dup.sources.includes(source)) dup.sources.push(source);
+        dup.ambiguous ||= v.ambiguous === true;   // 任一份标了歧义就按歧义处理：宁可少判，不可误判
+        continue;
+      }
+      const row = {
+        axis: v.axis, question: v.question, sources: [source],
+        ambiguous: v.ambiguous === true, colliders: v.colliders ?? [],
+      };
+      box.seen.set(dk, row);
+      box.variants.push(row);
+    }
+  }
+}
+const items = [...merged.values()].sort((a, b) => num(a.q) - num(b.q));
+
 const { apply } = await import(`file://${TARGET}`);
 let tool = null;
 const dispose = apply({ logger: { warn: () => {} }, tools: { register: (d) => { tool = d; } } }, {
   db: DB,
-  refusal: '该问题超出范围了，请联系管理员',
+  refusal: REFUSAL,
   docTitle: '电子信息工程学院新生必备指南',
-  category: cfg.category || '新生指南',
+  category,
 });
 if (!tool) { console.error('工具没注册上'); process.exit(2); }
 
@@ -46,7 +111,7 @@ for (const r of db.prepare('select payload from kb').all()) {
   for (let m = re.exec(String(r.payload ?? '')); m !== null; m = re.exec(String(r.payload ?? ''))) inDb.add(Number(m[1]));
 }
 db.close();
-const caseQs = cfg.items.map((it) => Number(String(it.q).replace(/^Q/i, '')));
+const caseQs = items.map((it) => num(it.q));
 const orphans = caseQs.filter((n) => !inDb.has(n));
 const uncovered = [...inDb].filter((n) => !caseQs.includes(n));
 if (orphans.length > 0 || uncovered.length > 0) {
@@ -64,53 +129,76 @@ function citesOf(text) {
     .map((n) => `Q${n}`);
 }
 
+/** reply 段（reply: 之后的全部行）。 asker 为空时 REFUSE 的 reply 应逐字只有固定话术。 */
+function replyOf(text) {
+  const i = text.indexOf('reply:\n');
+  return i < 0 ? null : text.slice(i + 'reply:\n'.length);
+}
+
+async function ask(question) {
+  const text = String(await tool.execute({ question }));
+  const verdict = text.split('\n')[0].trim();
+  return {
+    text,
+    verdict,
+    via: verdict === 'REFUSE' ? (/via: (\S+)/.exec(text)?.[1] ?? '检索门禁') : '检索',
+    cites: citesOf(text),
+    reply: replyOf(text),
+  };
+}
+
+// ───────────────────────────── 正例 ─────────────────────────────
 const rows = [];
-for (const it of cfg.items) {
+for (const it of items) {
   for (const v of it.variants) {
-    const text = await tool.execute({ question: v.question });
-    const verdict = text.split('\n')[0].trim();
-    const cites = citesOf(text);
+    const r = await ask(v.question);
     rows.push({
-      q: it.q,
-      section: it.section,
-      axis: v.axis,
-      question: v.question,
-      verdict,
-      via: verdict === 'REFUSE' ? (/via: (\S+)/.exec(text)?.[1] ?? '检索门禁') : '检索',
-      top1: cites[0] ?? null,
-      cites: cites.join(','),
+      q: it.q, section: it.section, axis: v.axis, sources: v.sources.join('+'),
+      question: v.question, ambiguous: v.ambiguous, colliders: v.colliders,
+      verdict: r.verdict, via: r.verdict === 'REFUSE' ? r.via : '检索',
+      top1: r.cites[0] ?? null, cites: r.cites.join(','),
     });
   }
 }
-dispose?.();
 
-const hit = (r) => r.verdict === 'ANSWER' && r.top1 === r.q;
-const ok = rows.filter(hit);
-const miss = rows.filter((r) => !hit(r));
+const isHit = (r) => r.verdict === 'ANSWER' && r.top1 === r.q;
+const gated = rows.filter((r) => !r.ambiguous);           // 门禁分母
+const exempt = rows.filter((r) => r.ambiguous);           // 只报不判
+const ok = gated.filter(isHit);
+const miss = gated.filter((r) => !isHit(r));
+
 const per = new Map();
-for (const r of rows) {
+for (const r of gated) {
   const s = per.get(r.q) ?? { section: r.section, total: 0, pass: 0 };
   s.total += 1;
-  if (hit(r)) s.pass += 1;
+  if (isHit(r)) s.pass += 1;
   per.set(r.q, s);
 }
+const tallyBy = (key) => {
+  const m = {};
+  for (const r of gated) {
+    const k = r[key];
+    (m[k] ??= { total: 0, pass: 0 });
+    m[k].total += 1;
+    if (isHit(r)) m[k].pass += 1;
+  }
+  return m;
+};
 
 console.log(`测试目标: ${TARGET}`);
-console.log(`条目数: ${cfg.items.length}　用例数: ${rows.length}　通过: ${ok.length}　miss: ${miss.length}`
-  + `　自召回率: ${((ok.length / rows.length) * 100).toFixed(1)}%`);
-console.log(`5 型全中的条目: ${[...per.values()].filter((s) => s.pass === s.total).length} / ${per.size}`);
-const byAxis = {};
-for (const r of rows) {
-  byAxis[r.axis] = byAxis[r.axis] ?? { total: 0, pass: 0 };
-  byAxis[r.axis].total += 1;
-  if (hit(r)) byAxis[r.axis].pass += 1;
+console.log(`正例集: ${SOURCES.map((s) => `${s.source}=${s.file.split('/').pop()}（${s.why}）`).join(' + ')}`);
+console.log(`条目数: ${items.length}　用例数: ${rows.length}（歧义豁免 ${exempt.length}）　门禁内: ${gated.length}`
+  + `　通过: ${ok.length}　miss: ${miss.length}　自召回率: ${((ok.length / gated.length) * 100).toFixed(1)}%`);
+console.log(`全中的条目: ${[...per.values()].filter((s) => s.pass === s.total).length} / ${per.size}`);
+for (const [key, label] of [['sources', '按来源'], ['axis', '按轴']]) {
+  console.log(`${label}通过率: ` + Object.entries(tallyBy(key))
+    .map(([k, v]) => `${k} ${v.pass}/${v.total}${v.pass === v.total ? '' : ' ✗'}`).join('　'));
 }
-console.log('分轴通过率: ' + Object.entries(byAxis).map(([k, v]) => `${k} ${v.pass}/${v.total}`).join('　'));
 
 if (miss.length > 0) {
   console.log(`\n=== miss 清单（${miss.length} 条）===`);
   for (const r of miss) {
-    console.log(`${r.q.padEnd(4)} ${r.axis.padEnd(5)} ${(r.verdict + ':' + r.via).padEnd(18)} ${r.question}`
+    console.log(`${r.q.padEnd(4)} ${r.sources.padEnd(11)} ${r.axis.padEnd(7)} ${(r.verdict + ':' + r.via).padEnd(18)} ${r.question}`
       + ` → top1=${r.top1 ?? '—'}  引用=[${r.cites || '无'}]`);
   }
   console.log('\n按条目聚合：');
@@ -119,5 +207,83 @@ if (miss.length > 0) {
     console.log(`  ${q}（${list[0].section}）: ` + list.map((m) => `${m.axis}→${m.top1 ?? m.verdict}`).join(' '));
   }
 }
-if (process.argv.includes('--json')) console.log('\n' + JSON.stringify({ ok: ok.length, miss: miss.length, rows }));
-process.exit(miss.length > 0 ? 1 : 0);
+if (exempt.length > 0) {
+  console.log(`\n=== 歧义豁免（不计门禁，${exempt.length} 条）===`);
+  for (const r of exempt) {
+    console.log(`${r.q.padEnd(4)} ${r.axis.padEnd(7)} ${isHit(r) ? '命中' : '未命中'}　${r.question}`
+      + `　撞标题: ${r.colliders.join('/') || '—'}`);
+  }
+}
+
+// ───────────────────────────── 负例 ─────────────────────────────
+// cases.neg.md 的口径（写在它自己文件头）：不带 `?` 的每一条必须 REFUSE；带 `?` 的是诊断项，
+// 文档确实可能沾边，出 ANSWER 由人判读、不计门禁。小节标题点了名门禁的（behavior-gate /
+// intent-gate），额外核对拦截层——层不符只是可观测性退化，不是放行，所以只告警不判失败。
+function loadNegs(file) {
+  const out = [];
+  let section = '（无小节）';
+  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const h = /^##+\s+(.*)$/.exec(line.trim());
+    if (h) { section = h[1].trim(); continue; }
+    const b = /^[-*]\s+(.+)$/.exec(line.trim());
+    if (!b) continue;
+    const raw = b[1].trim();
+    if (raw === '') continue;
+    // 实际约定（看第 6 小节）：诊断项写作 `- ? 问句`，`?` 是**行首标记**而不是句子里的问号。
+    // 小节标题点了"诊断"二字的同样算诊断项，两处任中其一即豁免门禁。
+    const marked = /^\?\s*/.test(raw);
+    const question = marked ? raw.replace(/^\?\s*/, '').trim() : raw;
+    const diagnostic = marked || /诊断/.test(section) || question === '';
+    out.push({
+      section,
+      question,
+      hard: !diagnostic,
+      expectVia: /behavior-gate/.test(section) ? 'behavior-gate'
+        : /intent-gate/.test(section) ? 'intent-gate' : null,
+    });
+  }
+  return out;
+}
+
+const negRows = [];
+for (const n of loadNegs(NEG_FILE)) {
+  const r = await ask(n.question);
+  negRows.push({ ...n, verdict: r.verdict, via: r.via, cites: r.cites.join(','), reply: r.reply });
+}
+const hard = negRows.filter((r) => r.hard);
+const falsePositives = hard.filter((r) => r.verdict !== 'REFUSE');
+const wrongLayer = hard.filter((r) => r.verdict === 'REFUSE' && r.expectVia && r.via !== r.expectVia);
+const diagAnswer = negRows.filter((r) => !r.hard && r.verdict !== 'REFUSE');
+// REFUSE 出口的形状一并复查：asker 为空时 reply 段必须逐字只有固定话术，不得多一行。
+const replyBroken = hard.filter((r) => r.verdict === 'REFUSE' && r.reply !== REFUSAL);
+
+console.log(`\n=== 负例门禁（${NEG_FILE.split('/').pop()}）===`);
+console.log(`硬负例 ${hard.length} 条：误放 ${falsePositives.length}　固定话术变形 ${replyBroken.length}　`
+  + `拦截层退化（仅告警）${wrongLayer.length}　诊断项出 ANSWER ${diagAnswer.length} 条`);
+for (const r of falsePositives) {
+  console.log(`  !!! 误放 [${r.section}] ${r.question} → ANSWER 引用=[${r.cites || '无'}]`);
+}
+for (const r of replyBroken) {
+  console.log(`  !!! 话术变形 [${r.section}] ${r.question} → reply=${JSON.stringify(r.reply)}`);
+}
+for (const r of wrongLayer) {
+  console.log(`  ~~~ 层不符 [${r.section}] ${r.question} 期望 ${r.expectVia}，实际 ${r.via}`);
+}
+for (const r of diagAnswer) {
+  console.log(`  ??? 诊断项 [${r.section}] ${r.question} → ANSWER 引用=[${r.cites || '无'}]（由人判读）`);
+}
+
+dispose?.();
+
+const bad = miss.length + falsePositives.length + replyBroken.length;
+if (process.argv.includes('--json')) {
+  console.log('\n' + JSON.stringify({
+    ok: ok.length, miss: miss.length, exempt: exempt.length,
+    hardNegs: hard.length, falsePositives: falsePositives.length, wrongLayer: wrongLayer.length,
+    rows, negs: negRows,
+  }));
+}
+console.log(bad === 0
+  ? '\n正例全绿、负例零误放、固定话术未变形。'
+  : `\n不通过：miss ${miss.length}　负例误放 ${falsePositives.length}　固定话术变形 ${replyBroken.length}`);
+process.exit(bad > 0 ? 1 : 0);
