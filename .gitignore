@@ -1,0 +1,38 @@
+# --- generated / binary artifacts -------------------------------------------
+# dist/kb.sqlite is produced by `node mkdist.mjs` (VACUUM INTO a single file).
+# It is a rebuildable artifact AND it carries the full text of out/*.md,
+# including the 档案邮寄 contact block with a personal mobile number.
+dist/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*-wal
+*-shm
+
+# Local live-KB backup (holds a real sqlite snapshot of the knowledge base).
+# Keeping it on disk is intentional; it just must not be versioned.
+.bak/
+.backups/
+
+# --- machine-local tooling state --------------------------------------------
+.dsh/
+
+# --- private source input ---------------------------------------------------
+# src.pdf is the original 8-page新生指南 pulled out of a WeChat container
+# directory. 312 KB binary; its text is already represented by out/*.md.
+src.pdf
+
+# --- dependencies -----------------------------------------------------------
+node_modules/
+
+# --- OS / editor noise ------------------------------------------------------
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+*~
+.idea/
+.vscode/
