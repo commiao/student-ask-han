@@ -61,25 +61,28 @@ function dbPath(cfg) {
   return r.picked ? join(r.picked, 'knowledge-base', 'kb.sqlite') : null;
 }
 
-/** 宿主端口每次启动都会变，只能探：lsof、DSH 进程参数、命令行候选逐个 GET /api/kb/list 认 JSON。 */
-function findHost(stub) {
+/**
+ * 宿主端口每次启动都会变，只能探：lsof、DSH 进程参数、命令行候选逐个 GET /api/kb/list 认 JSON。
+ * 返回 { ports, denied }：denied 记录 lsof/ps 哪个被子进程策略拒了——静默退化到 seeded 候选
+ * 会把人引向"没装插件"的错误结论（实测踩过两次）。
+ */
+function findHost() {
   const ports = new Set();
+  const denied = [];
   if (arg('port')) ports.add(Number(arg('port')));
   if (process.env.DSH_PORT) ports.add(Number(process.env.DSH_PORT));
   try {
     const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], { encoding: 'utf8' });
     for (const line of out.split('\n')) {
       const cols = line.trim().split(/\s+/);
-      // lsof 把命令名截到 8 字符、空格转义成 \x20：`DSH Desktop` → `DSH\x20De`。
-      // 原先写的是 /[Dd]s[Sh][Hh]*|Electron|node/（第二个字符要求**小写 s**），撞上大写 `DSH`
-      // 就把宿主端口整个过滤掉了——实测 09-02 晚：宿主 API 在 127.0.0.1:<GUI 端口> 上一直正常返回
-      // {"matched":8,…}，而 seeded 候选 43127 上跑的是 QQ 的 `Pair your phone again.`，
-      // 于是 prune / import / build --apply 全部报"没探到宿主端口"。改成大小写无关。
+      // lsof 把命令名截到 8 字符、空格转义成 \x20：`DSH Desktop` → `DSH\x20De`。要求大小写无关。
       if (!/dsh|duckship|electron|node/i.test(cols[0] ?? '')) continue;
-      const m = /:(\d+)\s*$/.exec(line.trim());
+      // 行尾是 `TCP 127.0.0.1:57110 (LISTEN)`——老写的 /:(\d+)\s*$/ 要求端口是最后一个 token，
+      // 于是每个端口都匹配不上，宿主端口从来没进候选（09-02 深夜实测：两条 lsof 行都返回 null）。
+      const m = /:(\d+)(?=\s+\([A-Za-z]+\)\s*$|\s*$)/.exec(line.trim());
       if (m) ports.add(Number(m[1]));
     }
-  } catch { /* 没 lsof 就只试显式端口 */ }
+  } catch (e) { denied.push('lsof:' + (e.code || e.message).split('\n')[0].slice(0, 40)); }
   // 官方 dsh 容器镜像未必带 lsof；其主进程会以
   // `dsh --profile web ... --port <n>` 启动，ps 是更轻量的可移植回退。
   try {
@@ -89,20 +92,70 @@ function findHost(stub) {
       const m = /--port\s+(\d+)/.exec(line);
       if (m) ports.add(Number(m[1]));
     }
-  } catch { /* BusyBox/受限环境仍退回显式端口与候选 */ }
-  const seeded = [...ports, 64685, 63158, 43127];
-  return stub || seeded;
+  } catch (e) { denied.push('ps:' + (e.code || e.message).split('\n')[0].slice(0, 40)); }
+  return { ports: [...new Set([...ports, 64685, 63158, 43127])], denied };
 }
 
-async function probeHost() {
-  for (const port of findHost()) {
+/**
+ * 逐个端口给出**判读**，不再只回 null：
+ *   ok            /api/kb/list 返回 KB 形状 JSON → 就是它
+ *   unauthorized  HTTP 401/403 → 端口在听，但这个路径没注册成 KB 路由（宿主对未注册路径回 401
+ *                 "unauthorized"）。**不等于"KB API 需要 token"**——09-02 实测：GUI 端口上
+ *                 /api/kb/list 与 /api/kb/import 免鉴权可达（后者缺参数时回 400），而另一个
+ *                 DSH 进程 43127 上同一批路径全是 401。把 401 当成"要 token"会白白停掉整条写链。
+ *   not-kb        端口在听，回来的不是 KB 形状（别的服务）
+ *   dead          连不上/超时
+ */
+async function probePorts(stub) {
+  const { ports, denied } = stub ? { ports: stub, denied: [] } : findHost();
+  const attempts = [];
+  let hit = null;
+  for (const port of ports) {
     try {
       const res = await fetch(`http://127.0.0.1:${port}/api/kb/list`, { signal: AbortSignal.timeout(1500) });
       const text = await res.text();
-      if (text.startsWith('{') && text.includes('"matched"')) return { port, body: JSON.parse(text) };
-    } catch { /* 换下一个 */ }
+      if (res.ok && text.startsWith('{') && text.includes('"matched"')) {
+        hit = { port, body: JSON.parse(text) };
+        attempts.push({ port, kind: 'ok', http: res.status });
+        break;
+      }
+      attempts.push({ port, kind: res.status === 401 || res.status === 403 ? 'unauthorized' : 'not-kb',
+        http: res.status, note: text.slice(0, 40).replace(/\s+/g, ' ') });
+    } catch (e) {
+      // fetch 失败在 Node 里统一是个笼统的 TypeError，真因藏在 cause（ECONNREFUSED / TimeoutError）。
+      const why = e.name === 'TimeoutError' ? '超时 1.5s' : String(e.cause?.code || e.cause?.name || e.name || e.code);
+      attempts.push({ port, kind: 'dead', note: why.slice(0, 30) });
+    }
   }
-  return null;
+  if (!hit && !stub) explainPorts(attempts, denied);
+  return { hit, attempts, denied };
+}
+
+/** 探不到时最没用的回答就是"没探到宿主端口"——把每个端口为什么不算数讲清楚。 */
+function explainPorts(attempts, denied) {
+  for (const a of attempts) {
+    if (a.kind === 'ok') continue;
+    const how = a.kind === 'unauthorized'
+      ? '在听，但 /api/kb/list 回未授权 → 这个端口上没注册 KB 路由（**不等于宿主 API 要 token**，见 FIXPLAN G-4）'
+      : a.kind === 'not-kb' ? `在听，但回来的不是 KB 形状（HTTP ${a.http} ${JSON.stringify(a.note || '')}）`
+      : `连不上（${a.note || '无响应'}）`;
+    console.log(`    · 端口 ${a.port}：${how}`);
+  }
+  if (denied.length) console.log(`    · 端口枚举受限：${denied.join(' / ')} → 真端口可能压根没进候选，显式加 --port <GUI 端口>`);
+}
+
+async function probeHost() {
+  return (await probePorts()).hit;
+}
+
+/** 写操作（import / build --apply / prune）统一走这里；探不到的逐端口判读由 probePorts 已经打过。 */
+async function needHost(action) {
+  const { hit, attempts } = await probePorts();
+  if (hit) return hit;
+  const unauth = attempts.filter((a) => a.kind === 'unauthorized').map((a) => a.port);
+  fail(`${action} 需要可写的宿主 KB API。${unauth.length
+    ? `上面那些端口里 ${unauth.join('/')} 是"在听但未授权"——先拿 GUI 端口试：--port <端口>（` + 'doctor 会列出判读）'
+    : '确认 DSH 在跑且装了 dsh-knowledge-base；枚举不到端口时加 --port <端口>'}`);
 }
 
 async function cmdDoctor() {
@@ -118,9 +171,9 @@ async function cmdDoctor() {
   const chars = conn.prepare('select coalesce(sum(length(payload)),0) n from kb').get().n;
   conn.close();
   ok(`知识库：${db}  条目 ${n}  原文 ${chars} 字符`);
-  const host = await probeHost();
-  if (host) ok(`宿主 API：127.0.0.1:${host.port}（/api/kb/list 返回 matched=${host.body.matched}，分类 ${JSON.stringify(host.body.categories)}）`);
-  else console.log('! 没探到宿主端口：import 需要 DSH 正在运行且装了 dsh-knowledge-base；install/verify 不需要');
+  const { hit } = await probePorts();   // 探不到时 probePorts 已打过逐端口判读
+  if (hit) ok(`宿主 API：127.0.0.1:${hit.port}（/api/kb/list 返回 matched=${hit.body.matched}，分类 ${JSON.stringify(hit.body.categories)}）`);
+  else console.log('! 没探到宿主 KB API：prune / import / build --apply 会失败；install 与离线体检不受影响');
   const presetRoot = r.picked ? join(r.picked, '.agent-presets', 'kb-qa') : null;
   if (presetRoot && existsSync(join(presetRoot, 'kb-ask.mjs'))) ok(`预设已安装：${presetRoot}`);
   else console.log(`! 预设未安装${presetRoot ? `（目标位置 ${presetRoot}）` : ''}：跑 install`);
@@ -129,8 +182,7 @@ async function cmdDoctor() {
 
 async function cmdImport(files) {
   if (files.length === 0) fail('用法：import <文件或目录> ...');
-  const host = await probeHost();
-  if (!host) fail('没探到宿主 API。请确认 DSH 正在运行、且该 profile 装了 dsh-knowledge-base；或加 --port <端口>');
+  const host = await needHost('import');
   const cfg = load();
   const list = expandTargets(files);
   if (list.length === 0) fail('没有可导入的文件');
@@ -174,8 +226,7 @@ function expandTargets(list) {
 async function cmdPrune() {
   const source = arg('source');
   if (!source) fail('用法：prune --source <文件名，如 报到须知.md>');
-  const host = await probeHost();
-  if (!host) fail('没探到宿主端口，无法调用 /api/kb/delete-file');
+  const host = await needHost('prune');
   const res = await fetch(`http://127.0.0.1:${host.port}/api/kb/delete-file`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source }),
   });
@@ -241,8 +292,7 @@ async function cmdBuild() {
   if (drift > 0 && !flag('force')) {
     fail(`${drift} 个文件与 docs 不一致——库里可能有手工整理过的条目。确认这些改动可以丢，再加 --force`);
   }
-  const host = await probeHost();
-  if (!host) fail('build --apply 需要宿主 API（正规导入管线）。确认 DSH 在跑且装了 dsh-knowledge-base，或加 --port <端口>');
+  const host = await needHost('build --apply');
   const api = async (path, body) => {
     const res = await fetch(`http://127.0.0.1:${host.port}/api/kb/${path}`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
