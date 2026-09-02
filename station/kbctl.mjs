@@ -359,6 +359,73 @@ async function cmdVerify() {
   } else console.log('! 未探到宿主端口，跳过线上连通检查');
 }
 
+// ───────────────────────── im-defaults ─────────────────────────
+// dsh-im 在发现一个新 bot 时，会把频道配置中的 `agentPreset` 交给
+// BotWorkspaceStore.ensure()。这正是“新绑的 QQ bot 不用再到群里 /preset”
+// 的原生入口；不碰 credentials，也不改已经绑好的 bot。
+//
+// 注意：群昵称上下文目前在 dsh-im 4.7 是 per-bot 的 workspaces.json 状态，
+// 没有同等的配置级 default。这里不能伪造一个看起来全自动、实则会被
+// 运行期状态覆盖的写入；新 bot 的默认预设则由宿主可靠地在创建时落盘。
+function cmdImDefaults() {
+  const r = harnessRoots();
+  const root = arg('root') || r.picked;
+  const profile = arg('profile', 'web');
+  if (!root) fail('定位不到 DSH 根，用 --root <DSH_HOME> 指定');
+  const file = join(root, 'profiles', profile, 'cordis.patch.yml');
+  if (!existsSync(file)) fail(`找不到 DSH profile 配置：${file}`);
+  const source = readFileSync(file, 'utf8');
+  const start = source.search(/^- id: xmanrui-dsh-im\s*$/m);
+  if (start < 0) fail(`${file} 中没有 xmanrui-dsh-im 插件块；为避免误改，未写入`);
+  const headEnd = source.indexOf('\n', start) + 1;
+  const nextStart = source.indexOf('\n- id:', headEnd);
+  const end = nextStart < 0 ? source.length : nextStart + 1;
+  const whole = source.slice(start, end);
+  const head = source.slice(start, headEnd);
+  const body = source.slice(headEnd, end);
+  const config = /^(\s*)config:\s*$/m.exec(body);
+  if (!config) fail('dsh-im 插件块没有 config；为避免误改，未写入');
+  const propertyIndent = `${config[1]}  `;
+  const qqHeader = new RegExp(`^${propertyIndent}qq:\\s*$`, 'm');
+  const preset = new RegExp(`^${propertyIndent}  agentPreset:\\s*(\\S.*?)\\s*$`, 'm');
+  let nextBody = body;
+  const current = preset.exec(body)?.[1] ?? null;
+  if (current && current !== 'kb-qa') {
+    fail(`QQ 默认预设已是 ${current}，不覆盖为 kb-qa；如需改动请先在 DSH 配置中确认`);
+  }
+  if (!current) {
+    if (qqHeader.test(body)) {
+      // qq 块存在但还没有 preset：把键放进该块的第一行，保持 YAML 缩进。
+      nextBody = body.replace(qqHeader, (line) => `${line}\n${propertyIndent}  agentPreset: kb-qa`);
+    } else {
+      // 当前官方 profile 通常有 rpcAuthority；没有时直接放在 config 开头。
+      const anchor = new RegExp(`^${propertyIndent}rpcAuthority:.*(?:\\n|$)`, 'm');
+      if (anchor.test(body)) {
+        nextBody = body.replace(anchor, (line) => `${line}${propertyIndent}qq:\n${propertyIndent}  agentPreset: kb-qa\n`);
+      } else {
+        const configLine = new RegExp(`^${config[1]}config:\\s*(?:\\n|$)`, 'm');
+        nextBody = body.replace(configLine, (line) => `${line}${propertyIndent}qq:\n${propertyIndent}  agentPreset: kb-qa\n`);
+      }
+    }
+  }
+  const next = source.replace(whole, `${head}${nextBody}`);
+  if (next === source) {
+    ok('dsh-im 的 QQ 默认预设已是 kb-qa（新绑定 bot 会自动使用它）');
+    return;
+  }
+  if (!flag('apply')) {
+    console.log(`演练：将在 ${file} 的 dsh-im.qq 配置写入 agentPreset: kb-qa。`);
+    console.log('确认后执行：node station/kbctl.mjs im-defaults --apply，然后重启 DSH。');
+    return;
+  }
+  const backup = `${file}.bak-${Date.now()}`;
+  copyFileSync(file, backup);
+  writeFileSync(file, next, 'utf8');
+  ok(`已写入 QQ 新 bot 默认预设 kb-qa（备份：${backup}）`);
+  console.log('重启 DSH 后生效：以后新绑定 QQ bot 的新会话自动为 kb-qa，无需 /preset 或 /new。');
+  console.log('群昵称上下文仍须按 bot 在 IM 设置中启用；当前 dsh-im 没有全局默认配置。');
+}
+
 // ─────────────────────────── reset-session ───────────────────────────
 // 把"在群里发 /new"换成一条本机命令。为什么需要：
 //   1) 预设绑定只在**建会话那一刻**读一次（bot-workspace-store.mjs:1037 `agentPresetFor(botId)`
@@ -463,6 +530,7 @@ else if (cmd === 'build') await cmdBuild();
 else if (cmd === 'ship') await cmdShip();
 else if (cmd === 'install') cmdInstall();
 else if (cmd === 'verify') await cmdVerify();
+else if (cmd === 'im-defaults') cmdImDefaults();
 else if (cmd === 'reset-session') await cmdResetSession();
 else if (cmd === 'render') cmdRender();
 else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|verify> [参数]
@@ -476,5 +544,6 @@ else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|ver
   ship  [--apply]     build → verify → install 一条龙；不带 --apply 全程演练
   install [--root] [--dry-run]  渲染并安装预设（kb-ask.mjs 单一来源，不复制第二份）
   verify              端到端 + 正/负例召回回归（打已安装预设）+ 挂载自检 + 宿主连通
+  im-defaults [--apply]  将 DSH 的“新绑定 QQ bot”默认预设设为 kb-qa（重启后生效）
   reset-session [--apply]    清掉群里已有的会话绑定，替代在群里发 /new（须先退出 DSH）
   render  [--apply]          只刷新仓库渲染快照 preset-kb-qa/agent.cordis.yml（不碰线上）`);

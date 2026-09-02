@@ -88,9 +88,25 @@ sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-persona
 
 之后每次更新先跑无参数的 `build` 审核漂移和目标条目，再明确决定是否写入。`install` 写入的是 NAS 持久化卷 `/volume1/docker/dsh-personal/data/dsh/.agent-presets/kb-qa/`，容器重建后仍会保留。
 
-### 4. 最后在 NAS DSH 中绑定 QQ
+### 4. 让此 NAS 的新 QQ bot 默认进入 `kb-qa`
 
-打开 NAS 的 DSH Web 设置 → IM 机器人，绑定**仅供 NAS 使用的 QQ 机器人**并选择 `kb-qa`；不要复用 Mac Desktop 已连接的同一个机器人。打开群聊上下文增强并勾选 `senderName`。若这里尚未绑定 QQ 或模型提供方，代码、预设和知识库虽已部署，但还不会对群消息做真实模型回复。
+这一项只需部署时做一次。它修改的是 NAS 的 DSH profile 配置（不是 QQ 凭证），使以后在该 DSH Web 中**新绑定的任一 QQ bot**创建时就带上 `kb-qa`，无需再选预设、也不要在群里发 `/preset`：
+
+```sh
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs im-defaults
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs im-defaults --apply
+sudo docker restart dsh-personal
+```
+
+`im-defaults` 只为**尚未创建的 bot**提供默认值，绝不覆盖已有 bot 的选择；它会先备份 `cordis.patch.yml`。DSH/dsh-im 升级若重建 profile，可在升级后重跑这条命令恢复默认。
+
+当前 dsh-im 4.7 的群聊昵称上下文是按 bot 保存在 `workspaces.json` 的状态，**没有**和 `agentPreset` 对等的全局默认配置。因此新 bot 仍应在设置 → IM 机器人里打开「群聊上下文增强」，字段选 `senderId`、`senderName`。这不影响它默认走 `kb-qa`；只影响回复能否带上提问人的群昵称。
+
+### 5. 最后在 NAS DSH 中绑定 QQ
+
+打开 NAS 的 DSH Web 设置 → IM 机器人，绑定**仅供 NAS 使用的 QQ 机器人**；不要复用 Mac Desktop 已连接的同一个机器人。第 4 步已使它默认绑定 `kb-qa`。打开群聊上下文增强并勾选 `senderId`、`senderName`。若这里尚未绑定 QQ 或模型提供方，代码、预设和知识库虽已部署，但还不会对群消息做真实模型回复。
 
 > ⚠️ 当前 `dsh-im` 的群聊命令未按发送者区分：任何能 @ 到机器人的成员都可能发送 `/preset`、`/model` 或 `/workspace`。因此仅将该机器人用于可信群；面向开放群前，需要先在 `dsh-im` 层增加管理员命令控制，预设本身不能解决这个入口风险。
 
