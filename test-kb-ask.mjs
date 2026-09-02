@@ -1,15 +1,15 @@
 // 直接以假 ctx 挂载插件，取出注册的工具并执行——不依赖 DSH 运行时的端到端自测。
 // 默认测已安装到 .agent-presets 的那份（线上真身）；KB_ASK_TARGET=workspace 可测工作区副本。
-const TARGETS = {
-  installed: '/Users/mac/Library/Application Support/dsh-desktop/harness/.agent-presets/kb-qa/kb-ask.mjs',
-  workspace: '/Users/mac/work-deepseek/kb/preset-kb-qa/kb-ask.mjs',
-};
+import { defaultDb, targetPlugin } from './test-paths.mjs';
+
 const which = process.env.KB_ASK_TARGET || 'installed';
-const target = TARGETS[which];
+const target = targetPlugin(which);
+if (!target) throw new Error('定位不到已安装的 kb-ask.mjs；请设置 DSH_HOME 或 KB_ASK_INSTALLED');
 console.log(`>>> 测试目标: ${which}  ${target}`);
 const { apply } = await import(`file://${target}`);
 
-const DB = process.env.KB_ASK_DB || '/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite';
+const DB = defaultDb();
+if (!DB) throw new Error('定位不到 kb.sqlite；请设置 DSH_HOME 或 KB_ASK_DB');
 const REFUSAL = '该问题超出范围了，请联系管理员';
 
 let tool = null;

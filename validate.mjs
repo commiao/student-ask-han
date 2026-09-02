@@ -8,11 +8,14 @@
 //       node validate.mjs installed            # 检已装进 .agent-presets 的那份
 import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { dirname } from 'node:path';
+import { installedPlugin } from './test-paths.mjs';
 
 const WORKSPACE = new URL('./preset-kb-qa/', import.meta.url).pathname;
-const INSTALLED
-  = '/Users/mac/Library/Application Support/dsh-desktop/harness/.agent-presets/kb-qa/';
+const installed = installedPlugin();
+const INSTALLED = installed ? `${dirname(installed)}/` : null;
 const DIR = process.argv[2] === 'installed' ? INSTALLED : WORKSPACE;
+if (!DIR) throw new Error('定位不到已安装的 kb-qa；请设置 DSH_HOME 或 KB_ASK_INSTALLED');
 const REFUSAL = '该问题超出范围了，请联系管理员';
 
 const fails = [];

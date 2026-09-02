@@ -1,9 +1,12 @@
 // 分数分布探针：把每个问题在打分式里跑出 top 分数，用来定"条目级分数地板"。
 // 地板必须落在"真在范围内的题的最低分"和"假阳性题的最高分"之间——没有这张表就不能拍值。
-const target = '/Users/mac/work-deepseek/kb/preset-kb-qa/kb-ask.mjs';
+import { defaultDb, workspacePlugin } from './test-paths.mjs';
+
+const target = workspacePlugin();
 process.env.KB_ASK_DEBUG_SCORES = '1';
 const { apply } = await import(`file://${target}`);
-const DB = process.env.KB_ASK_DB || '/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite';
+const DB = defaultDb();
+if (!DB) throw new Error('定位不到 kb.sqlite；请设置 DSH_HOME 或 KB_ASK_DB');
 let tool = null;
 apply({ logger: { warn: () => {} }, tools: { register: (d) => { tool = d; } } },
   { db: DB, refusal: '该问题超出范围了，请联系管理员', docTitle: '电子信息工程学院新生必备指南', category: '新生指南' });

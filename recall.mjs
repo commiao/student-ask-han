@@ -17,12 +17,12 @@
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { auditAliases, extractAliases, normalize } from './alias-audit.mjs';
+import { defaultDb, targetPlugin } from './test-paths.mjs';
 
-const TARGET = process.env.KB_ASK_TARGET === 'installed'
-  ? '/Users/mac/Library/Application Support/dsh-desktop/harness/.agent-presets/kb-qa/kb-ask.mjs'
-  : '/Users/mac/work-deepseek/kb/preset-kb-qa/kb-ask.mjs';
-const DB = process.env.KB_ASK_DB
-  || '/Users/mac/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite';
+const TARGET = targetPlugin(process.env.KB_ASK_TARGET || 'workspace');
+if (!TARGET) throw new Error('定位不到 kb-ask.mjs；请设置 DSH_HOME 或 KB_ASK_INSTALLED');
+const DB = defaultDb();
+if (!DB) throw new Error('定位不到 kb.sqlite；请设置 DSH_HOME 或 KB_ASK_DB');
 const HERE = import.meta.url;
 const SOURCES = [
   { file: new URL('./cases.gen.json', HERE).pathname, source: 'gen', why: '规则派生基线' },

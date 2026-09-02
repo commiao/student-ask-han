@@ -9,7 +9,7 @@
 | 3 | IM 桥 `@xmanrui/dsh-im` | DSH 的 profile bundle | 机器人连不上 QQ |
 | 4 | QQ 机器人凭证 + 群 | 设置 → IM 机器人 | 收不到消息 |
 
-**目标机不需要装 `dsh-knowledge-base` 插件。** `kb-ask.mjs` 只用 `node:sqlite` 只读打开那个库文件，跟插件没有依赖关系。插件只在**维护知识库**（导 PDF、改分类、删条目）时才需要——那些动作留在这台管理机上做，做完把 `kb.sqlite` 重新导出一份推过去即可。
+运行期的 `kb-ask.mjs` 只用 `node:sqlite` 只读库，不依赖 `dsh-knowledge-base`。不过本仓库的 **Git 首次部署** 会让 NAS 上已运行的 DSH 通过该插件的本地 API，从 `out/` 中重建知识库；因此首次执行 `build --apply` 前，NAS 的 DSH profile 必须已启用 `dsh-knowledge-base`。
 
 `<harness>` 按部署形态取：
 
@@ -20,7 +20,83 @@
 
 前提：宿主 Node ≥ 22.5（`node:sqlite` 要求）。Desktop 自带版本满足；自建 `dsh web` 的话先 `node -p "require('node:sqlite').DatabaseSync"` 验一下。
 
-## 步骤
+## 生产流程：Mac 开发测试 → Git → NAS DSH
+
+`out/` 中的六份 Markdown 是知识的唯一真源，Git 是发布通道；不要把 Mac 上的 `kb.sqlite` 直接复制到 NAS。`mkdist.mjs` 仍可用来做本机归档，但 `dist/` 不入库，也不是 NAS 发布输入。
+
+### 1. 在 Mac 开发机测试并推送
+
+在项目 Git 克隆目录执行：
+
+```sh
+node mkdist.mjs
+KB_ASK_TARGET=workspace node test-kb-ask.mjs
+KB_ASK_TARGET=workspace node recall.mjs
+node scores.mjs
+node validate.mjs
+git add -A && git commit -m '...'
+git push origin main
+```
+
+上述测试不调用模型；它们只验证插件的检索、拒绝、引用和安装前静态约束。先确认工作区干净并已推送，再去 NAS。
+
+### 2. 在 NAS 取得同一 Git 版本
+
+以下命令假定 NAS 容器名为 `dsh-personal`、其工作区挂载为 `/workspace`，持久化 DSH 根为容器内 `/data/dsh`。首次部署在 NAS 宿主机执行：
+
+```sh
+git clone git@github.com:commiao/student-ask-han.git \
+  /volume1/docker/dsh-personal/workspace/student-ask-han
+cd /volume1/docker/dsh-personal/workspace/student-ask-han
+git rev-parse HEAD
+```
+
+后续发布只更新这个工作树，绝不在 NAS 上编辑源码：
+
+```sh
+cd /volume1/docker/dsh-personal/workspace/student-ask-han
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git rev-parse HEAD
+```
+
+最后一个提交号应与 Mac 上已推送的提交号一致。
+
+### 3. 在 NAS 容器内建库、安装预设并验证
+
+仍在 NAS 宿主机执行。先运行不会写数据的体检和漂移检查：
+
+```sh
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs doctor
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs build
+```
+
+**仅首次且确认 `build` 显示目标分类为空时**，执行一次重建；`--force` 允许覆盖同名来源，不能在未知已有数据时照抄使用：
+
+```sh
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs build --apply --force
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs install --root /data/dsh/.agent-presets
+sudo docker restart dsh-personal
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs verify
+```
+
+之后每次更新先跑无参数的 `build` 审核漂移和目标条目，再明确决定是否写入。`install` 写入的是 NAS 持久化卷 `/volume1/docker/dsh-personal/data/dsh/.agent-presets/kb-qa/`，容器重建后仍会保留。
+
+### 4. 最后在 NAS DSH 中绑定 QQ
+
+打开 NAS 的 DSH Web 设置 → IM 机器人，绑定**仅供 NAS 使用的 QQ 机器人**并选择 `kb-qa`；不要复用 Mac Desktop 已连接的同一个机器人。打开群聊上下文增强并勾选 `senderName`。若这里尚未绑定 QQ 或模型提供方，代码、预设和知识库虽已部署，但还不会对群消息做真实模型回复。
+
+> ⚠️ 当前 `dsh-im` 的群聊命令未按发送者区分：任何能 @ 到机器人的成员都可能发送 `/preset`、`/model` 或 `/workspace`。因此仅将该机器人用于可信群；面向开放群前，需要先在 `dsh-im` 层增加管理员命令控制，预设本身不能解决这个入口风险。
+
+已有群会话需重建时，先停止容器，再在容器内执行 `node station/kbctl.mjs reset-session --apply`，最后启动容器。不要把 `/new` 或 `/preset` 当作群内运维入口。
+
+## 旧式手工复制（仅供迁移参考，不用于此项目发布）
 
 ### 在这台管理机上打包
 

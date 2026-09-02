@@ -63,10 +63,11 @@
 - id: kb-ask
   name: ./kb-ask.mjs
   config:
-    # 支持 ~ / $HOME / $DSH_HOME / %APPDATA% 展开，换机器换用户名不用改；
-    # 整行删掉也行——插件会按平台自动找 Desktop 与 ~/.dsh 两种默认位置。
-    # Windows 写成: '%APPDATA%/dsh-desktop/harness/knowledge-base/kb.sqlite'
-    db: '~/Library/Application Support/dsh-desktop/harness/knowledge-base/kb.sqlite'
+    # 不写 db：插件依次寻找 $DSH_HOME、Desktop 与 ~/.dsh 的标准知识库位置。
+    # 因此 Mac 开发机和 NAS 容器复用同一份预设；特殊路径才显式设置 db。
+    docTitle: '电子信息工程学院新生必备指南'
+    category: '新生指南'
     refusal: '该问题超出范围了，请联系管理员'
     # 超过这个字符数就退回"只给检索选中的条目"；当前库 2846 字符，走全量投喂。
     # 需要改的话设环境变量 KB_ASK_FULL_DUMP_MAX，或在此加 fullDumpMax: 数字。
+    fullDumpMax: 6000
