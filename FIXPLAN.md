@@ -579,3 +579,12 @@ docs 指纹 e772bfd3b181e93e（6 个文件）/ 库基线 ✓ 同版本     ← �
 - **安全网已重铺**：`.bak/` 重建，放进本轮线上库的新快照 `kb-2026-09-02T16-53-13-266Z.sqlite`（323584 B，与线上同字节），并写 `README.txt` 说明"这里只有快照、真源是 git 里的 `out/`、**永远别对整目录 `rm -rf`**"。
 - **规则（同一轮第七次踩坑之后写成硬规定）**：删目录前必须先列内容；破坏性命令只允许指向**具体文件名**；`||` 右边不许放删除——它专门会在"你以为的失败"那一刻执行。另一条：中文一个字都不能进 shell 命令行（这次是 `node -e` 里 JS 字符串带中文，bash 直接 `syntax error near unexpected token '('` 并把持久 shell 打回重置）；含 CJK 的取证一律写成 `/tmp/xxx.mjs` 再跑。
 - **现存库副本**：`/tmp/kb-backup-…2110` = **含 PDF 的事发状态**（8 行 / 6601 字符 / 15 幽灵）、`/tmp/kb_clean.sqlite` = 清完的 6 行 2856、线上 = 6 行 2856 + 17 幽灵、`dist/kb.sqlite` = 6 行 2856（id 不同内容同）。
+
+## 第 9 轮（09-03 01:11 之后）：install 落地复验，19/19
+
+用户跑了 `kbctl install` + 重启。`node accept.mjs` 重跑：**硬项 19：PASS 19　FAIL 0（exit 0）**。
+
+- **B2 `端到端用例 · installed` 从 55/57 → 57/57 `exit=0`**；C3 两侧哈希对上：`workspace 1ba8c1af035e == installed 1ba8c1af035e`，`.agent-presets/kb-qa/{kb-ask.mjs,agent.cordis.yml,preset.yml,VERSION.txt}` mtime 全为 09-03 01:11。**排序修复到这一刻才真正在线上。**
+- **宿主端口跨重启会变**：上一轮的 57110 现在 `ECONNREFUSED`，新实例（pid 97729）在 **60901** 上回 `matched=6`；`doctor` 不带 `--port` 自动跟到新端口——第 8 轮修 `findHost` 正则的价值当场兑现。反过来说明把 `--port` 写进操作文档是错的路子（README 已改）。
+- **43127 现在的响应体是 `Pair your phone again.`（HTTP 401，pid 97536）**：QQ 侧配对掉了。群里做口头验收前要先重新配对，否则"机器人没回答"会被误读成预设没生效——与第 6/7 轮的"401 误读"同一类坑，只是这次坑在配对不在鉴权。
+- 仍未解冻/未清：`intake/` 的 Q38–Q55（机检已过，5126/6000）、G-3 的 17 个 FTS 幽灵、G-5 docs 口径、G-6 的 `00-总体说明.md` 替换版。
