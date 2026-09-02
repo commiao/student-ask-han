@@ -323,5 +323,25 @@ node probe3.mjs /tmp/base-ask.mjs preset-kb-qa/kb-ask.mjs      # 旧：三条全
   下一轮统一到 `cases.neg.md` 单一来源（`scores.mjs` 的 in/out 分布探针保留，那是另一件事）。
 - 并行会话风险仍在：本轮 `/tmp/kb-q.txt` 被它占走、持久 shell 两次被它的 REPL 吞掉命令，
   它自报的 commit `5784718` 在本机查无实据。**后续任何改动前先 `git status` + `git log` 核对现场。**
+  同类情况第二次出现：另一个会话（"蓝雨"）自报"已把 `via:` 从默认返回里去掉并验证 55/55 通过"，
+  本机 `git log`（HEAD 未变）、`git status`（干净）、代码（`kb-ask.mjs:547/552/648` 三处仍无条件
+  输出 `via:`）三方都对不上。**汇报一律以 `git log` + `git status` 为准。**
 - 换文档时 `INTENT_PATTERNS` 排除词表与 `DOMAIN_GATES` 依据侧仍需人工复查；`ALIASES` 那处已由
   `alias-audit.mjs` 机检兜住。
+
+### 决策记录（2026-09-02 中午）：调试行不进模型视野这件事**不做**
+
+有提议把 `via: / tried: / matched: / greeting 键名` 从 `kb_ask` 的默认返回里拿掉（只留 `verdict` +
+`reply:`），理由是这些诊断文本不该进模型上下文。**用户拍板：不做**——判据是"群里有没有漏出来"，
+实测两轮 15 条群消息零泄漏，现有约束（`reply:` 排在最后 + persona 要求逐字照抄）压得住。
+
+- 维持现状的代价也说清楚过：调试行**必然**随工具返回值进模型上下文（这是插件契约，`tool.execute()`
+  返回的就是那一整串），所以风险是概率而非故障。
+- 反手取证失败一次，记下来免得重复踩：会话日志 `session.jsonl.zstd` **每个会话只有 1 行头记录**
+  （`type/version/id/createdAt/cwd/agentPreset`），**不存对话正文与工具返回**。所以在里面搜不到 `via:`
+  不构成"模型没见过"的证据。头记录另有可用之处：它明写了那次群会话绑的预设
+  （`agentPreset:"kb-qa"`），是比群里发 `/presetlist` 更硬的绑定证据。
+- 真出现泄漏再动手，做法已经想好：调试行收进 `KB_ASK_DEBUG_VIA=1`，同步改 `test-kb-ask.mjs` 的归因
+  断言与 `recall.mjs` 的"拦截层退化"检查（两处都靠读 `via:` 工作），并补一条"没设该 env 时不许出现
+  调试行"的断言。**只改输出可见性，不碰判定。**
+- 顺手落地：`peek.mjs` 加了 `KB_PEEK_RAW=1`，一条命令就能看到模型收到的整串原文（不带则行为不变）。
