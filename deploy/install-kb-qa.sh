@@ -42,6 +42,16 @@ fi
 
 DST="$ROOT/kb-qa"
 mkdir -p "$DST"
+# roster 的唯一真源是 station/agent.cordis.yml.tpl；$SRC/agent.cordis.yml 只是**渲染快照**
+# （由 kbctl install 刷新）。快照过期 = 改了 tpl 没重跑 install，这时 cp 出去的就是第二份
+# persona，线上行为与仓库不一致且没人知道 —— 所以先自检再拷。node 不在时只能放行并明说。
+if command -v node >/dev/null 2>&1 && [ -f "$(dirname "$SRC")/validate.mjs" ]; then
+  (cd "$(dirname "$SRC")" && node validate.mjs) || { echo "三件套自检没过（多半是渲染快照与 tpl 漂移），拒绝装" >&2; exit 1; }
+elif [ ! -f "$(dirname "$SRC")/validate.mjs" ]; then
+  : # 交付包里没有 validate.mjs，跳过自检
+else
+  echo "提示：本机没有 node，跳过渲染快照自检；装完请在有 node 的机器上跑 validate.mjs installed" >&2
+fi
 cp "$SRC/preset.yml" "$SRC/agent.cordis.yml" "$SRC/kb-ask.mjs" "$DST/"
 
 # 这两项缺一样就会 PRESET_UNAVAILABLE，且 QQ 侧看不到原因，所以装完立即自检。

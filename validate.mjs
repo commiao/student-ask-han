@@ -50,6 +50,34 @@ check('persona 未挂载外部知识工具', !/web_search|dsh-knowledge-base/.te
   '一旦挂上联网/写库工具，闭卷性质就不成立了');
 check('preset.yml 有 order 与 name', /order:/.test(presetYml) && /name:/.test(presetYml));
 
+// roster 唯一真源。tpl 渲染出来是什么样，仓库快照 preset-kb-qa/agent.cordis.yml 与已安装那份
+// 就必须一字不差是那样。这条是 2026-09-02 查出"两条安装路径装出两份不同 persona"之后补的：
+// 当时线上缺 `不列出你查了什么词` 这条防泄漏约束，而它只写在仓库那份里，改多少次都不会上线。
+// 渲染的 4 个占位符必须与 kbctl.mjs cmdInstall 里那段保持一致。
+const STATION = new URL('./station/', import.meta.url).pathname;
+const TPL = STATION + 'agent.cordis.yml.tpl';
+if (existsSync(TPL)) {
+  const DEF = {
+    title: '电子信息工程学院新生必备指南', category: '新生指南',
+    refusal: REFUSAL, fullDumpMax: 6000,
+  };
+  let cfg = DEF;
+  if (existsSync(STATION + 'station.json')) {
+    try { cfg = { ...DEF, ...JSON.parse(readFileSync(STATION + 'station.json', 'utf8')) }; }
+    catch { check('station.json 可解析', false); }
+  }
+  const rendered = readFileSync(TPL, 'utf8')
+    .replaceAll('{{title}}', cfg.title)
+    .replaceAll('{{category}}', cfg.category)
+    .replaceAll('{{refusal}}', cfg.refusal)
+    .replaceAll('{{fullDumpMax}}', String(cfg.fullDumpMax));
+  check('roster 唯一真源：目标那份逐字等于 tpl 渲染结果', yml === rendered,
+    yml === rendered ? ''
+      : '改了 station/agent.cordis.yml.tpl 必须重跑 kbctl install（它同时刷新仓库快照与已装那份）');
+} else {
+  console.log('~~~  没有 station/agent.cordis.yml.tpl（瘦身交付包里会缺），跳过真源比对');
+}
+
 console.log(`\n目标: ${DIR}`);
 if (fails.length > 0) {
   console.log(`不通过 ${fails.length} 项：${fails.join(' / ')}`);

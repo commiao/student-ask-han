@@ -315,6 +315,17 @@ function cmdInstall() {
   if (flag('dry-run')) { console.log(`目标：${dst}\n`); console.log(roster); return; }
   mkdirSync(dst, { recursive: true });
   writeFileSync(join(dst, 'agent.cordis.yml'), roster);
+  // roster 的唯一真源是 station/agent.cordis.yml.tpl。仓库里 preset-kb-qa/agent.cordis.yml
+  // 只是**渲染快照**（给人读、给"手工 cp 三个文件"那条路用），每次 install 一并刷新。
+  // 以前它是第二条真源：改了它不会上线（install 从 tpl 渲染），换机器用 deploy 脚本又会装出
+  // 另一份 persona。现在由 validate.mjs 断言"快照 == 渲染结果"，漂移直接判失败。
+  const snap = join(ROOT, 'preset-kb-qa', 'agent.cordis.yml');
+  try {
+    writeFileSync(snap, roster);
+    ok(`渲染快照已同步：${snap}`);
+  } catch (e) {
+    console.log(`! 渲染快照没写成（${e.code}）：手工 cp 装预设时，那份 yml 可能还是旧的`);
+  }
   writeFileSync(join(dst, 'preset.yml'), `name: 闭卷问答（${cfg.title}）\ndescription: 只回答知识库「${cfg.category}」已导入内容；工具面仅 kb_ask；越界一律固定话术。\norder: 5\n`);
   copyFileSync(PLUGIN_SRC, join(dst, 'kb-ask.mjs'));
   ok(`安装到 ${dst}`);
@@ -419,6 +430,28 @@ async function cmdResetSession() {
   console.log('\n下一步：启动 DSH。群里下一条普通消息就会新建会话，并自动使用上面列出的预设——不需要任何群内命令。');
 }
 
+// 只刷新仓库里的渲染快照（preset-kb-qa/agent.cordis.yml），不碰 .agent-presets。
+// 用途：改了 tpl 想让仓库那份先自洽（`node validate.mjs` 才不报漂移），或者打算走
+// "手工 cp 三个文件"那条路装机时，用它把快照刷新到最新。
+function cmdRender() {
+  const cfg = load();
+  const roster = readFileSync(TPL, 'utf8')
+    .replaceAll('{{title}}', cfg.title)
+    .replaceAll('{{category}}', cfg.category)
+    .replaceAll('{{refusal}}', cfg.refusal)
+    .replaceAll('{{fullDumpMax}}', String(cfg.fullDumpMax));
+  const snap = join(ROOT, 'preset-kb-qa', 'agent.cordis.yml');
+  const same = existsSync(snap) && readFileSync(snap, 'utf8') === roster;
+  if (!flag('apply')) {
+    console.log(`演练：快照 ${snap} ${same ? '已与 tpl 渲染结果一致' : '与 tpl 渲染结果不一致，需刷新'}`);
+    console.log('确认后加 --apply（只写仓库这一个文件，不碰已安装预设）。');
+    return;
+  }
+  writeFileSync(snap, roster);
+  ok(`渲染快照已刷新：${snap}`);
+  console.log('注意：这只同步仓库快照。线上那份要生效仍需 install + 完全退出重启 DSH。');
+}
+
 const cmd = process.argv[2];
 const rest = process.argv.slice(3).filter((a) => !a.startsWith('--'));
 if (cmd === 'doctor') await cmdDoctor();
@@ -431,6 +464,7 @@ else if (cmd === 'ship') await cmdShip();
 else if (cmd === 'install') cmdInstall();
 else if (cmd === 'verify') await cmdVerify();
 else if (cmd === 'reset-session') await cmdResetSession();
+else if (cmd === 'render') cmdRender();
 else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|verify> [参数]
 
   doctor              环境体检：harness 根、知识库、宿主端口、预设是否已装
@@ -442,4 +476,5 @@ else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|ver
   ship  [--apply]     build → verify → install 一条龙；不带 --apply 全程演练
   install [--root] [--dry-run]  渲染并安装预设（kb-ask.mjs 单一来源，不复制第二份）
   verify              端到端 + 正/负例召回回归（打已安装预设）+ 挂载自检 + 宿主连通
-  reset-session [--apply]    清掉群里已有的会话绑定，替代在群里发 /new（须先退出 DSH）`);
+  reset-session [--apply]    清掉群里已有的会话绑定，替代在群里发 /new（须先退出 DSH）
+  render  [--apply]          只刷新仓库渲染快照 preset-kb-qa/agent.cordis.yml（不碰线上）`);

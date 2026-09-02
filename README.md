@@ -67,6 +67,29 @@ node validate.mjs            # 工作区；node validate.mjs installed 查已装
 全绿的形状是：`55/55` → `miss: 0` + `硬负例 71 条：误放 0` + `别名 107 条：致命 0` → `误放条数：0 / 16　错项条数：0 / 17`。
 `recall.mjs` 退出码非 0 就是没通过（1 = miss / 负例误放 / 固定话术变形 / 别名失效；2 = 用例集缺文件、不合契约或与库条目对不上）。
 
+### 按场景选命令
+
+| 场景 | 跑什么 | 只看哪一行 |
+|---|---|---|
+| 改完门禁/打分/别名，确认没改坏 | 上面四条（`--check` → `test-kb-ask` → `recall` → `scores`） | `recall` 最后一行中文 |
+| 只想知道越界问句会不会拿高分 | `node scores.mjs` | `误放条数：0 / 16`、`in 组最低 top`（现 2.63） |
+| 装到线上，验**已安装那份** | `node validate.mjs installed` + `KB_ASK_TARGET=installed node recall.mjs`，或一把 `cd station && node kbctl.mjs verify` | 同上；两份哈希还得一致（`shasum` 比 `preset-kb-qa/kb-ask.mjs` 与 `.agent-presets/kb-qa/kb-ask.mjs`） |
+| 换手册 / 重新导入文档 | `cd station && node kbctl.mjs build --apply` → `node gen-cases.mjs` → `node recall.mjs` | 别名对账**会成批报警**，那是预期，逐条按新文档重写 `ALIASES` |
+| 群里"该答的没答 / 不该答的答了"，要定位哪一层拦的 | `KB_PEEK_RAW=1 node peek.mjs '<问题>'` | `via:` = 哪个门禁拦的；`tried:` = 试过哪些检索词；检索门禁那条没有 `via:` 行 |
+| 想看打分怎么算的（调阈值前的取证） | `KB_ASK_DEBUG_SCORES=1 KB_PEEK_RAW=1 node peek.mjs '<问题>'` | 末尾 `scores: 第N条 Qn=分值` |
+| 两个版本引擎逐条比行为差异 | `node probe-compare.mjs` | `verdict 翻转 N，拦截层变更 N，引用条目变化 N` |
+| 只想快速扫一遍负例有没有误放 | `node probe-neg.mjs` | `异常 0 条` |
+| 三件套自身坏没坏（roster / inject / 话术逐字 / persona） | `node validate.mjs`（`installed` 参数查线上那份） | `三件套自检全过。` |
+
+`peek.mjs` 默认只印 `reply:` 正文（核对引用标号背后的原文）；加 `KB_PEEK_RAW=1` 才印模型收到的
+整串原文。用它传中文问题是安全的——那是你自己终端里的事；**但别在自动化脚本里把 CJK 拼进 shell
+命令串**：本仓库的持久 shell 实测会把中文参数打断（已踩过三次，见 FIXPLAN）。
+
+三份用例怎么配合读：`cases.gen.json` 154 问句（37 条目 × 6 轴，**派生物，别手改**）＋
+`cases.human.json` 186 问句（简称/错别字/倒装/否定式/近义换词 + 防误伤，**唯一不可再生的资产**）
+= 340 → `recall.mjs` 合并去重成 339 条用例 → 其中 1 条标"歧义"只登记不入门禁 → 打印 `门禁内 338`。
+`cases.neg.md` 里 `- ` 开头必须拦住，`- ? ` 开头是诊断项（答了只报 `???` 不判失败）。
+
 三条维护纪律，都是踩过坑写下来的：
 
 - **正例集是两个文件，不许合并成一个名字。** 规则派生那份（`cases.gen.json`）由 `node gen-cases.mjs`
