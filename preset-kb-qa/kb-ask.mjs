@@ -672,9 +672,15 @@ export function apply(ctx, config) {
       const rawSet = new Set(rawGrams);
       const hasTopic = (c) => topicGrams.some(
         (g) => c.section.includes(g) || c.title.includes(g) || c.body.includes(g));
+      // 豁免再加一条：**非章节词**的原话 gram 出现在条目标题里 → 这条就是在答那件事，不是擦边。
+      // 实测第 8 轮：`宿舍饭菜价格怎么样` 里"宿舍"只是场景词，正解 Q32「食堂饭菜价格怎么样」
+      // 因为不含"宿舍"被整批删掉，答案退化成宿舍条目一排并列 4.46（Q32 压根进不了候选）。
+      // 判据仍只用问句与标题的既有信息，不引入词表、不动 0.4/0.7 截断与 +4 加成。
+      const nonTopicRaw = rawGrams.filter((g) => !topicGrams.includes(g));
+      const titledInTitle = (c) => nonTopicRaw.some((g) => c.title.includes(g));
       if (topicGrams.length > 0) {
         const kept = cand.filter((c) => hasTopic(c) || c.hitT.length > 0
-          || c.hitG.some((g) => !rawSet.has(g)));
+          || c.hitG.some((g) => !rawSet.has(g)) || titledInTitle(c));
         if (kept.length > 0 && kept.length < cand.length) {
           cand.length = 0;
           cand.push(...kept);
