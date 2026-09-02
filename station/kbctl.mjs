@@ -313,7 +313,10 @@ function cmdInstall() {
   if (!shipped.includes("export const inject = ['tools']")) fail('装好的 kb-ask.mjs 缺 inject 声明');
   execFileSync(process.execPath, ['--check', join(dst, 'kb-ask.mjs')]);
   ok('挂载自检：inject 声明在位、语法可解析');
-  console.log('\n必须完全退出并重启 DSH（同进程会复用缓存的旧模块），然后群里 /presetlist → /preset kb-qa → /new → 提问。');
+  console.log('\n必须完全退出并重启 DSH（同进程会复用缓存的旧模块）。');
+  console.log('预设绑定是**按 bot** 存的（integrations/<渠道>/workspaces.json 的 agentPresets），'
+    + '新群第一条消息自动用 kb-qa，不需要在群里发 /preset。');
+  console.log('已有旧会话要换新绑定时才需要 /new；本机可用 `node kbctl.mjs reset-session --apply` 替代（先退出 DSH）。');
 }
 
 async function cmdVerify() {
@@ -335,6 +338,77 @@ async function cmdVerify() {
   } else console.log('! 未探到宿主端口，跳过线上连通检查');
 }
 
+// ─────────────────────────── reset-session ───────────────────────────
+// 把"在群里发 /new"换成一条本机命令。为什么需要：
+//   1) 预设绑定只在**建会话那一刻**读一次（bot-workspace-store.mjs:1037 `agentPresetFor(botId)`
+//      传进 createSession），插件自己的话术也是这么写的：「已有会话不变……请先发送 /new」；
+//   2) dsh-im 里**没有**任何"空闲自动新建会话"的机制——全仓只有二维码 TTL 和 /presetlist 的
+//      15 分钟快照 TTL。所以老会话会无限期保持它创建时的状态，升级只能靠人手动 /new；
+//   3) 会话 ↔ 群的映射落在 <harness>/integrations/<channel>/bots/<botId>/state.json 的 `sessions`
+//      （ConversationStateStore：启动 load、每次 setSession/clearSession 立刻落盘）。
+// 删掉 sessions 里的条目 = 下一条群消息找不到绑定 → 新建会话 → 自动带上 workspaces.json 里当前的
+// agentPreset。效果和群里发 /new 一样，但不出现在群聊天记录里。
+// ⚠ 只能在 DSH 完全退出后做：运行期那个 store 持有内存态并会把手改的那份写回去。
+async function cmdResetSession() {
+  const r = harnessRoots();
+  const root = arg('root') || r.picked;
+  if (!root) fail('定位不到 harness 根，用 --root <.../harness> 指定');
+  const integ = join(root, 'integrations');
+  if (!existsSync(integ)) fail(`没有 ${integ}`);
+  const files = [];
+  for (const ch of readdirSync(integ)) {
+    const bots = join(integ, ch, 'bots');
+    if (!existsSync(bots)) continue;
+    for (const b of readdirSync(bots)) {
+      const p = join(bots, b, 'state.json');
+      if (existsSync(p)) files.push({ channel: ch, bot: b, file: p });
+    }
+  }
+  if (files.length === 0) fail(`${integ} 下没找到任何 bots/*/state.json`);
+  // 顺带把"新会话会绑哪个预设"打出来：这个键就是 /preset 写的东西，不在 state.json 里。
+  console.log('\n各 bot 当前用于**新会话**的预设（/preset 写的是这里）：');
+  for (const { channel, file } of files) {
+    const wj = join(dirname(dirname(dirname(file))), 'workspaces.json');
+    if (!existsSync(wj)) continue;
+    try {
+      const doc = JSON.parse(readFileSync(wj, 'utf8'));
+      for (const [botId, preset] of Object.entries(doc.agentPresets || {})) {
+        console.log(`  ${channel} ${botId} → ${preset}`);
+      }
+    } catch { /* 读不动就不报，不影响主流程 */ }
+  }
+  let touched = 0;
+  for (const { channel, bot, file } of files) {
+    let doc;
+    try {
+      doc = JSON.parse(readFileSync(file, 'utf8'));
+    } catch (e) {
+      console.log(`! ${channel}/${bot}：state.json 读不了（${e.message}），跳过`);
+      continue;
+    }
+    const keys = Object.keys(doc.sessions || {});
+    console.log(`\n${file}\n  会话绑定 ${keys.length} 条：${keys.join('  ') || '（空）'}`);
+    if (keys.length === 0) continue;
+    touched += keys.length;
+    if (!flag('apply')) continue;
+    const age = Date.now() - statSync(file).mtimeMs;
+    if (age < 90_000) {
+      fail(`state.json ${Math.round(age / 1000)} 秒前刚被写过 —— DSH 还在运行，现在改会被它写回去。先 Cmd+Q。`);
+    }
+    const bak = `${file}.bak-${Date.now()}`;
+    copyFileSync(file, bak);
+    doc.sessions = {};
+    writeFileSync(file, `${JSON.stringify(doc, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    ok(`已清空 ${keys.length} 条绑定（原文件备份在 ${bak}）`);
+  }
+  if (!flag('apply')) {
+    console.log(`\n演练模式：将清空 ${touched} 条会话绑定。确认后加 --apply。`);
+    console.log('前置条件：DSH 必须已完全退出（Cmd+Q），否则运行期那份内存状态会把改动覆盖掉。');
+    return;
+  }
+  console.log('\n下一步：启动 DSH。群里下一条普通消息就会新建会话，并自动使用上面列出的预设——不需要任何群内命令。');
+}
+
 const cmd = process.argv[2];
 const rest = process.argv.slice(3).filter((a) => !a.startsWith('--'));
 if (cmd === 'doctor') await cmdDoctor();
@@ -346,6 +420,7 @@ else if (cmd === 'build') await cmdBuild();
 else if (cmd === 'ship') await cmdShip();
 else if (cmd === 'install') cmdInstall();
 else if (cmd === 'verify') await cmdVerify();
+else if (cmd === 'reset-session') await cmdResetSession();
 else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|verify> [参数]
 
   doctor              环境体检：harness 根、知识库、宿主端口、预设是否已装
@@ -356,4 +431,5 @@ else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|ver
   build [--apply]     以 docs/ 为真源重建库；不带 --apply 只做漂移体检，不动数据
   ship  [--apply]     build → verify → install 一条龙；不带 --apply 全程演练
   install [--root] [--dry-run]  渲染并安装预设（kb-ask.mjs 单一来源，不复制第二份）
-  verify              47 例回归 + 挂载自检 + 宿主连通`);
+  verify              端到端 + 正/负例召回回归（打已安装预设）+ 挂载自检 + 宿主连通
+  reset-session [--apply]    清掉群里已有的会话绑定，替代在群里发 /new（须先退出 DSH）`);

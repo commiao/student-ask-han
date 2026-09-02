@@ -67,14 +67,38 @@ powershell -ExecutionPolicy Bypass -File kb\deploy\install-kb-qa.ps1   # Windows
 ### 生效与验证
 
 1. **完全退出并重启 DSH**（macOS `Cmd+Q`，Windows 托盘右键退出）。不重启一定不生效：Node 的 `import()` 按 file URL 缓存模块，同一进程里改了预设插件文件也不会重读。这个坑本次踩过一次。
-2. 群里依次发：
+2. **绑定预设只需做一次，不用在群里发命令。** `/preset kb-qa` 写的是
+   `<harness>/integrations/dsh-qq/workspaces.json` 里的 `agentPresets.{botId}`——**按 bot** 存，不是按群。
+   新会话创建时插件读这个键（`bot-workspace-store.mjs` 的 `agentPresetFor(botId)`），所以：
+
+   - 同一个 bot 以后被拉进多少群都一样，**每个新群的第一条消息就自动是 kb-qa**，不需要任何操作；
+   - 也可以在 设置 → IM 机器人 里选，落的是同一个键；
+   - 判断"这个 bot 新会话会用哪个预设"：`node station/kbctl.mjs reset-session`（演练模式）会直接把它打出来。
+
+3. 首次装机仍建议在群里走一遍确认能挂上：
 
 ```
 /presetlist        →  应列出「闭卷问答（知识库限定）」，且不附带失败原因
-/preset kb-qa
-/new               →  会话一旦产出过内容就不能再切预设，必须开新的
-宿舍晚上断电吗
+宿舍晚上断电吗     →  已有会话本来就绑着 kb-qa 时，这条直接就能答
 ```
+
+4. **`/new` 只在"已有会话要换绑定"时才需要**（预设/模型这些都在建会话那一刻定死，插件话术原话是
+   「已有会话不变……请先发送 /new」）。**代码升级按机制不需要它**（模块缓存是进程级的，重启必然重读
+   文件）——不过这半句**尚未实测**：本机那次升级实际发了 `/new`（`harness/sessions/` 下 01:50 和 01:57
+   各建了一个 session 目录）。而 dsh-im **没有**空闲自动新建会话的机制，所以老群会一直用老会话。
+   确实要重开会话时，用本地命令替代群消息：
+
+```sh
+# 先 Cmd+Q 退出 DSH（运行期那份内存状态会把改动写回去），再：
+node station/kbctl.mjs reset-session          # 演练：列出每个 bot 的会话绑定
+node station/kbctl.mjs reset-session --apply  # 清空绑定，群里下一条消息自动新建会话
+```
+
+> ⚠️ 一个必须知道的入口风险：`dsh-im` 识别命令只看"消息文本以 `/` 开头"（`batch-input.mjs`），
+> **不区分发送者**，我在插件里没找到任何"仅管理员可用 / 关闭命令"的开关。也就是说群里任何能 @ 到
+> 机器人的成员都可以发 `/preset --default`（切回带 bash/联网的宿主默认预设）或 `/model`、`/workspace`。
+> 对"只做回答问题"这个目标，这是比检索误发放行更根本的越界面——控制手段目前只能在 QQ 平台侧
+> （谁能在群里 @ 机器人）和"别把这个 bot 拉进不特定的大群"，不要指望预设本身挡住群内命令。
 
 3. 期望回复：
 
