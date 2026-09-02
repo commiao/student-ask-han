@@ -21,6 +21,7 @@ export const inject = ['tools'];
  * 只读访问 kb.sqlite；不导入、不改分类、不删除（那些能力归管理员侧）。
  */
 
+import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 
 /** 问句里的填充词：不参与检索，避免它们把交集打空。 */
@@ -472,6 +473,32 @@ function greetingOf(text) {
 }
 
 /**
+ * 版本探针：`版本号`「什么版本」这类问句回一条常量文本，不进检索。
+ * 为什么要有：线上跑的到底是哪一份代码，过去只能靠人记 install 的时间或在电脑上比 shasum；
+ * 群里 @机器人 版本号 就能当场对齐。选词前实测过 `版本` 在库里 df=0，不会跟任何条目抢。
+ * 判据刻意用"归一化后整句精确匹配"而不是 includes：防止「住宿要登记版本号吗」这类真问题被劫走。
+ */
+const VERSION_RE = /^(版本号?|啥版本|什么版本|哪一?个版本|版本多少|版本是|当前版本|现在版本)(号|多少|是什么|是啥|是)?$/;
+function versionOf(text) {
+  const norm = String(text ?? '')
+    .replace(/@[^\s@，。！？、]+/g, '')
+    .replace(/[\s,，。.、!！?？~～·]+/g, '')
+    .replace(/[呀啊呢吧啦哦哈]+$/, '')
+    .toLowerCase();
+  if (norm === '' || norm.length > 8) return null;   // 与招呼语同一道长度闸：长了就一定还带着别的内容
+  return VERSION_RE.test(norm);
+}
+
+/** kbctl install 生成的版本戳；不是它装出去的（手工 cp / 仓库里直接跑）就读不到，返回 null。 */
+function versionStamp() {
+  try {
+    return readFileSync(new URL('./VERSION.txt', import.meta.url), 'utf8').trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 招呼与致谢的常量回复。刻意做到：两句话以内、不解释自己遇不到答案时怎么处理、
  * 不罗列章节清单（那属于"行为规则/实现细节"，且容易过期），只引导先读原文再提问。
  */
@@ -558,6 +585,12 @@ export function apply(ctx, config) {
         const ghead = asker === '' ? '' : `@${asker} `;
         return ['ANSWER', `via: greeting:${greet}`, `reply:\n${ghead}${greetingReply(greet)}`].join('\n');
       }
+      // 版本探针放在"库可用性"判断**之前**：库坏了更要能一句话问出线上是哪版代码。
+      if (versionOf(question)) {
+        const stamp = versionStamp() ?? '未知（这份不是 kbctl install 装出去的，旁边没有 VERSION.txt）';
+        const vhead = asker === '' ? '' : `@${asker} `;
+        return ['ANSWER', 'via: version-probe', `reply:\n${vhead}当前版本：${stamp}`].join('\n');
+      }
       if (handle === null) return refuse(['note: 知识库不可用']);
 
       const { db } = handle;
@@ -597,6 +630,31 @@ export function apply(ctx, config) {
           cand.push({ section, label: it.label, title: it.title, body: it.body, rank, hitT, hitG, themeT, themeG });
         }
       }
+      // 章节主题词门槛（第 5 轮，治 `宿舍怎么安排` 答成 Q6 接站）。
+      // 问句点到某个**章节名**里的词（宿舍/报到/军训/食堂/缴费…）时，只靠"通用动词擦边"的候选
+      // 不许参与排名：Q6 标题「车站时间安排」里的 `安排` 被主题加权当成主题词 ×3，通篇没有"宿舍"
+      // 却以 3.45 拿 top1，0.4 相关度截断和 0.7 跨章节规则都救不回来（它是唯一幸存者）。
+      //
+      // 但不是"不含主题词就一律出局"——实测那样会打掉一条真答案：
+      //   用例 Q5「家长可以陪同进校吗」的近义换词问法 `爸妈能送我进宿舍吗`
+      //   文档通篇说"进校"、没有"宿舍"二字，硬门槛把它删了（recall 337/338）。用例是对的，规则太粗。
+      // 于是豁免条件按命中的**来源**区分，不引入任何新词表：
+      //   · hitT 非空，或 hitG 里有任何一个 gram 不在 rawGrams 里 → 这是别名表搭的"同义词桥"
+      //     （爸妈→家长），是这套检索存在的意义本身，保留；
+      //   · 只有原话 gram 命中（`安排` 就是从问句里切出来的）→ 擦边，出局。
+      // 问句没点到任何章节名时整条规则不触发（`多大的床`「衣柜多大」走原路），不扩大影响面。
+      const topicGrams = rawGrams.filter((g) => cand.some((c) => c.section.includes(g)));
+      const rawSet = new Set(rawGrams);
+      const hasTopic = (c) => topicGrams.some(
+        (g) => c.section.includes(g) || c.title.includes(g) || c.body.includes(g));
+      if (topicGrams.length > 0) {
+        const kept = cand.filter((c) => hasTopic(c) || c.hitT.length > 0
+          || c.hitG.some((g) => !rawSet.has(g)));
+        if (kept.length > 0 && kept.length < cand.length) {
+          cand.length = 0;
+          cand.push(...kept);
+        }
+      }
       // 第二遍：按 IDF 加权打分；同分时按检索顺序决胜。
       const weight = gramWeights(grams, cand.flatMap((c) => c.hitG));
       // 标题字面覆盖率：问句里的字有多少落在**这条的标题**里。它只用来破平手，权重刻意压在 1 分以下
@@ -610,6 +668,15 @@ export function apply(ctx, config) {
         const titleCov = qChars.length === 0 ? 0 : qChars.filter((ch) => c.title.includes(ch)).length / qChars.length;
         c.titleCov = titleCov;
         c.score = score + titleCov * 0.9 - c.rank * 0.01;
+        // 主题词加成的固定分量：门槛生效后剩下的候选都含同一个章节词，而该词在 37 个条目里高频
+        // 出现、IDF 被压到 0.6 左右，于是一排并列、弱相关条目混进引用（实测 `宿舍怎么安排` 曾拖出
+        // Q11/Q13/Q14/Q15/Q16/Q17）。给"含主题词"的条目固定 +4，让 0.4 截断重新有东西可切。
+        // ⚠️ 试过把加成收窄到"主题词必须在**标题**里"，实测反而炸出 1 条越界误放
+        //    （`报到当天家长能住哪` → 答 Q6/Q1/Q2/Q10）+ 2 条 miss：收窄后 报到/宿舍 这类高频
+        //    章节词的相对优势变大，把"顺带提及"的条目又抬回引用集。所以这里保持章节级 +4，
+        //    代价是 `宿舍怎么安排` 这类泛问会多带几条同章节条目——但都在问的那一章里，不是答非所问。
+        // +4 取值在"压得住并列、又盖不过真正的强匹配"之间：`报到当天怎么接站` 对 Q6 是 11.57。
+        if (topicGrams.length > 0 && hasTopic(c)) c.score += 4;
       }
       cand.sort((a, b) => b.score - a.score);
       // 相关度截断：小库全量投喂下每条依据都会拖一串"顺带提到"的无关条目（实测

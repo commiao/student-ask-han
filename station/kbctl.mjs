@@ -328,6 +328,8 @@ function cmdInstall() {
   }
   writeFileSync(join(dst, 'preset.yml'), `name: 闭卷问答（${cfg.title}）\ndescription: 只回答知识库「${cfg.category}」已导入内容；工具面仅 kb_ask；越界一律固定话术。\norder: 5\n`);
   copyFileSync(PLUGIN_SRC, join(dst, 'kb-ask.mjs'));
+  // 版本戳：kb-ask.mjs 的 `版本号` 探针读的就是这个文件，缺了它线上只能回"未知"。
+  writeFileSync(join(dst, 'VERSION.txt'), `${versionStampText()}\n`);
   ok(`安装到 ${dst}`);
   // 这两项缺一样就只会看到一句没有原因的 PRESET_UNAVAILABLE，装完立刻自检。
   const shipped = readFileSync(join(dst, 'kb-ask.mjs'), 'utf8');
@@ -497,6 +499,45 @@ async function cmdResetSession() {
   console.log('\n下一步：启动 DSH。群里下一条普通消息就会新建会话，并自动使用上面列出的预设——不需要任何群内命令。');
 }
 
+// 版本戳：让群里一句 `@机器人 版本号` 就能对上"线上跑的到底是哪份代码"。
+// 内容 = 仓库短哈希（脏树加 +dirty）+ 用例集形状 + 装机时刻。用例数直接读文件自己数，
+// 不在 install 里跑回归（那是 verify 的活）；文件缺（瘦身交付包）就只报哈希。
+function versionStampText() {
+  const git = (args) => {
+    try { return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim(); } catch { return ''; }
+  };
+  const hash = git(['rev-parse', '--short', 'HEAD']) || 'nogit';
+  const dirty = git(['status', '--porcelain']) ? '+dirty' : '';
+  let shape = '';
+  try {
+    const n = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8')).items
+      .reduce((s, i) => s + (i.variants?.length ?? 0), 0);
+    const neg = readFileSync(join(ROOT, 'cases.neg.md'), 'utf8')
+      .split('\n').filter((l) => /^- \S/.test(l) && !/^- \?/.test(l)).length;
+    shape = ` 正例${n('cases.gen.json') + n('cases.human.json')}/负例${neg}`;
+  } catch { /* 用例文件不在，跳过 */ }
+  const when = new Date().toLocaleString('zh-CN', { hour12: false });
+  return `${hash}${dirty}${shape} · 装于 ${when}`;
+}
+
+// 比对仓库与线上两份版本戳：升级前跑一条就知道"到底装没装上"，不必靠记忆或比 shasum。
+function cmdVersion() {
+  const mine = versionStampText();
+  console.log(`仓库现在：${mine}`);
+  const r = harnessRoots();
+  const root = arg('root') || (r.picked ? join(r.picked, '.agent-presets') : null);
+  const f = root ? join(root, 'kb-qa', 'VERSION.txt') : null;
+  if (!f || !existsSync(f)) {
+    console.log('线上：没有 VERSION.txt —— 那份不是 kbctl install 装的（或装机时还没有版本戳），跑一次 install');
+    return;
+  }
+  const live = readFileSync(f, 'utf8').trim();
+  console.log(`线上那份：${live}`);
+  console.log(live.split(' ')[0] === mine.split(' ')[0]
+    ? '哈希一致 ✓（时间戳不同是正常的）'
+    : '! 不一致：要 install + 完全退出重启 DSH 才会生效');
+}
+
 // 只刷新仓库里的渲染快照（preset-kb-qa/agent.cordis.yml），不碰 .agent-presets。
 // 用途：改了 tpl 想让仓库那份先自洽（`node validate.mjs` 才不报漂移），或者打算走
 // "手工 cp 三个文件"那条路装机时，用它把快照刷新到最新。
@@ -533,6 +574,7 @@ else if (cmd === 'verify') await cmdVerify();
 else if (cmd === 'im-defaults') cmdImDefaults();
 else if (cmd === 'reset-session') await cmdResetSession();
 else if (cmd === 'render') cmdRender();
+else if (cmd === 'version') cmdVersion();
 else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|verify> [参数]
 
   doctor              环境体检：harness 根、知识库、宿主端口、预设是否已装
