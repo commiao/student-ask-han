@@ -561,6 +561,15 @@ docs 指纹 e772bfd3b181e93e（6 个文件）/ 库基线 ✓ 同版本     ← �
 2. 401 到底是什么：源码在 `@deepseek-ai/dsh-client-connection`——`requestRejection()` = 可信 Host 检查（不过 → 403）+ `browserAuth.isAuthenticated()`（无宿主签名 Cookie → 401），它挂在 **RPC 通道** `register()` 上；而 `createSharedFetchHandler` 走的是插件逐条注册的 exact fetch 路由，**不过这道鉴权**。实测 57110：`/api/kb/list` 200、`/api/kb/__nope__` 401 `unauthorized`、`/api/kb/import` GET 400 `请求体不是合法 JSON`。→ **KB 路由免鉴权可达；401 只代表"这个端口上没把这条路径注册成 KB 路由"**。43127（另一个 DSH 进程）上同一批路径全是 401，所以把 43127 的 401 读成"宿主 API 要 token"是双重误读。
 3. 但**写链仍按用户裁定冻结**：本轮不 `build --apply`、不重导、不清 FTS。代码侧做的是让判读不再骗人：`probePorts()` 给每个端口三类结论（`unauthorized` / `not-kb` / `dead`，连不上的把 `cause.code` 挖出来），探不到时直接打印逐端口判读 + "端口枚举受限"提示；`prune / import / build --apply` 统一走 `needHost()`，失败时先给判读再报错。`kb-health.mjs` 同时改成：默认库路径走 `test-paths.mjs` 的跨平台解析、FTS5 不可用降级为 `! FTS 检查降级`（不计失败但明说"这项没验到"）、内容不一致显式 `exit 1`。四条退出路径都造库实测：0（一致）/ 1（不一致）/ 0（无 FTS5 的库，降级）/ 2（库路径不存在）。
 
+### 验收单（`node accept.mjs`，本轮正式结论）
+
+19 项硬判据：**PASS 16 / FAIL 3**。三条红的读法完全不同，别混成"没测过"：
+
+- **B2 + C3 = 同一个根因：线上那份引擎是旧的。** 哈希 `workspace 1ba8c1af035e` vs `installed 416a7dbbb5e7`，于是 installed 端到端 55/57（红的就是 `宿舍饭菜价格怎么样` 仍引 Q13）。**代码侧没有缺陷，是"改了没装上"**。`cd station && node kbctl.mjs install` 在 agent 沙箱里 `EPERM open .../.agent-presets/kb-qa/agent.cordis.yml`（`test -w` 也是 NOT writable），必须人跑；跑完还要 Cmd+Q 重启，QQ 侧才会引 Q32。验收单把这条单独列成 C3，就是为了不让"红"被误读成"修坏了"。
+- **F1 = 跑单子时 `accept.mjs` 自己还没提交**（工作树 1 项未提交）。提交后复跑即绿。
+
+其余全绿的读数：`node --check` 14 个文件；workspace 端到端 57/57；召回 340/340 自召回 100% 全中条目 37/37（两目标一致）；硬负例 96 误放 0、固定话术变形 0；别名 113 致命 0 告警 1；分数地板误放 0/16 错项 0/17、in 组最低 top 2.63；三件套两目标全过；库 ↔ `out/*.md` 逐文件 sha 全等（6 条 / 2856 字符 / 37 个 Q 段）；入库机检 5126/6000 全量投喂开、55 条 Q 连续；`doctor` 不带 `--port` 自探到 57110；宿主只读 `matched=6`、无探针残留；`build` 演练确认未改库；FTS 幽灵 17 个（G-3 仍只记账）。软读数两条：口语 32/59 = 54.2%、幽灵 rowid 明细。
+
 ### 我造成的损害（写在最后，下次开会先读这段）
 
 清理 rebase 残留时我在一条命令里写了 `rmdir .bak 2>/dev/null || rm -rf .bak`。`rmdir` 因目录非空失败，`||` 右边的 `rm -rf` 就把**整个 `.bak/` 连同 `kb-175125.sqlite`（311296 B，9-1 17:51 的库快照）一起删了**。`.bak/` 是 `.gitignore` 第 16 行**特意保留的本地库快照目录**，不是 sed 垃圾——我看见名字像垃圾就动了手，没先 `ls` 里面是什么。

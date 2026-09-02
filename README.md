@@ -19,6 +19,7 @@
 | `cases.neg.md` | 负例 96 条硬门禁 + 诊断项 5 条（现出 ANSWER 的 2 条只报 `???`、不判失败）：行首不带 `?` 的每一条必须 REFUSE（出现 ANSWER 即假阳性、退出码非 0）；小节标题点了 `xxx-gate` 的还核对拦截层 |
 | `alias-audit.mjs` | 别名表 ↔ 文档词表对账（被 `recall.mjs` 调用）：展开词在库里一个字都没有 = 死别名；出现在 ≥2/3 条目又无条件 = 放行面。两者都判失败 |
 | `scores.mjs` / `validate.mjs` / `probe-*.mjs` | 打分与探针脚本，用于对比预设改动前后的行为（`probe3.mjs` 拿多个引擎版本跑同一批越界问句，做误放归因；`validate.mjs` 查三件套硬不变量） |
+| `accept.mjs` | **一条命令的验收单**（全程只读）：19 项硬判据 = 语法 → workspace/installed 双份的端到端·召回·硬负例·别名·分数地板 → 三件套 → 仓库与线上引擎哈希 → 库↔docs 对账 → 入库机检 → 宿主只读连通与探针残留 → `build` 演练 → git 是否已推。**"改好了"和"装上了"分两栏看**：只有 B2/C3 红 = 代码没问题、是没 `install`。离线跑加 `--skip-live` |
 | `kb-health.mjs` | **只读**体检（不碰判定逻辑）：库 payload ↔ `out/*.md` 逐文件 sha 对账、`docs` 之外的来源报警（界面直导的漏网条目）、FTS 索引层幽灵条目探针。默认库路径走 `test-paths.mjs` 的跨平台解析（`KB_ASK_DB`/`DSH_HOME` → macOS/Windows/Linux/XDG → `~/.dsh`），`KB_HEALTH_DB=<path>` 覆盖。**退出码是契约**：0 一致 / 1 内容有出入 / 2 库或 docs 定位不到；FTS5 不可用只降级打印 `! FTS 检查降级`，不冒充通过。**它是"库和 docs 是不是同一份"的取证工具，不是验收入口**——验收看 `validate.mjs` + `test-kb-ask` + `recall` |
 | `intake-check.mjs` | **入库前**机检（只读）：全量投喂预算（收进去会不会把 `fullDumpMax` 顶翻）、Q 编号全局唯一与续号、首行标题契约、零宽字符、时效性措辞、联系方式。硬不合格 `exit 1` = 不许搬进 `out/` |
 | `probe-scores.mjs` | 修排序前的取证：直调插件、开 `KB_ASK_DEBUG_SCORES`，把候选分数分布打出来（"top1 错了"要看的是**分布**，不是猜阈值）。`--q` 临时问句、`--file` 批量、`--installed` 查线上那份 |
@@ -53,7 +54,8 @@ powershell -ExecutionPolicy Bypass -File deploy\install-kb-qa.ps1   # Windows
 
 ## 验证
 
-改判定逻辑（门禁、打分、别名）前后都要跑这四条，缺一条码不准"没退化"：
+**要交给人拍板时跑 `node accept.mjs`**（下面几条它都包了，逐项给判据行与退出码）。
+平时改逻辑用下面四条快链即可。改判定逻辑（门禁、打分、别名）前后四条都要跑，缺一条码不准"没退化"：
 
 ```sh
 node --check preset-kb-qa/kb-ask.mjs            # 语法
