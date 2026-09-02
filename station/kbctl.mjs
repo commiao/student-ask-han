@@ -69,7 +69,13 @@ function findHost(stub) {
   try {
     const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], { encoding: 'utf8' });
     for (const line of out.split('\n')) {
-      if (!/[Dd]s[Sh][Hh]*|Electron|node/.test(line.split(/\s+/)[0] || '')) continue;
+      const cols = line.trim().split(/\s+/);
+      // lsof 把命令名截到 8 字符、空格转义成 \x20：`DSH Desktop` → `DSH\x20De`。
+      // 原先写的是 /[Dd]s[Sh][Hh]*|Electron|node/（第二个字符要求**小写 s**），撞上大写 `DSH`
+      // 就把宿主端口整个过滤掉了——实测 09-02 晚：宿主 API 在 127.0.0.1:<GUI 端口> 上一直正常返回
+      // {"matched":8,…}，而 seeded 候选 43127 上跑的是 QQ 的 `Pair your phone again.`，
+      // 于是 prune / import / build --apply 全部报"没探到宿主端口"。改成大小写无关。
+      if (!/dsh|duckship|electron|node/i.test(cols[0] ?? '')) continue;
       const m = /:(\d+)\s*$/.exec(line.trim());
       if (m) ports.add(Number(m[1]));
     }
