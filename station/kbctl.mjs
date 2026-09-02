@@ -61,7 +61,7 @@ function dbPath(cfg) {
   return r.picked ? join(r.picked, 'knowledge-base', 'kb.sqlite') : null;
 }
 
-/** 宿主端口每次启动都会变，只能探：lsof/命令行候选逐个 GET /api/kb/list 认 JSON。 */
+/** 宿主端口每次启动都会变，只能探：lsof、DSH 进程参数、命令行候选逐个 GET /api/kb/list 认 JSON。 */
 function findHost(stub) {
   const ports = new Set();
   if (arg('port')) ports.add(Number(arg('port')));
@@ -74,6 +74,16 @@ function findHost(stub) {
       if (m) ports.add(Number(m[1]));
     }
   } catch { /* 没 lsof 就只试显式端口 */ }
+  // 官方 dsh 容器镜像未必带 lsof；其主进程会以
+  // `dsh --profile web ... --port <n>` 启动，ps 是更轻量的可移植回退。
+  try {
+    const out = execFileSync('ps', ['-eo', 'args='], { encoding: 'utf8' });
+    for (const line of out.split('\n')) {
+      if (!/\bdsh\b/.test(line)) continue;
+      const m = /--port\s+(\d+)/.exec(line);
+      if (m) ports.add(Number(m[1]));
+    }
+  } catch { /* BusyBox/受限环境仍退回显式端口与候选 */ }
   const seeded = [...ports, 64685, 63158, 43127];
   return stub || seeded;
 }
