@@ -75,7 +75,7 @@ node validate.mjs            # 工作区；node validate.mjs installed 查已装
 | 改完门禁/打分/别名，确认没改坏 | 上面四条（`--check` → `test-kb-ask` → `recall` → `scores`） | `recall` 最后一行中文 |
 | 只想知道越界问句会不会拿高分 | `node scores.mjs` | `误放条数：0 / 16`、`in 组最低 top`（现 2.63） |
 | 装到线上，验**已安装那份** | `node validate.mjs installed` + `KB_ASK_TARGET=installed node recall.mjs`，或一把 `cd station && node kbctl.mjs verify` | 同上；两份哈希还得一致（`shasum` 比 `preset-kb-qa/kb-ask.mjs` 与 `.agent-presets/kb-qa/kb-ask.mjs`） |
-| 换手册 / 重新导入文档 | `cd station && node kbctl.mjs build --apply` → `node gen-cases.mjs` → `node recall.mjs` | 别名对账**会成批报警**，那是预期，逐条按新文档重写 `ALIASES`。**前置：宿主 API 得通**（`doctor` 要打出 `✓ 宿主 API`；401/探不到端口时这条链整体不可用，见 FIXPLAN G-4） |
+| 换手册 / 重新导入文档 | `cd station && node kbctl.mjs build --apply --port <宿主端口>` → `node gen-cases.mjs` → `node recall.mjs` | 别名对账**会成批报警**，那是预期，逐条按新文档重写 `ALIASES`。**由 agent 代跑时必须带 `--port`**：沙箱拒绝 `lsof`/`ps`，端口探不到（见 FIXPLAN G-4） |
 | 删过条目、或怀疑有人绕过 docs 从界面直接导入 | `node kb-health.mjs`（只读） | `内容层：与 docs 一致 ✓` + `幽灵 rowid：无`。有非 `.md` 来源或 `docs` 之外的条目 = 有人从界面导了东西，重建会静默丢 |
 | 群里"该答的没答 / 不该答的答了"，要定位哪一层拦的 | `KB_PEEK_RAW=1 node peek.mjs '<问题>'` | `via:` = 哪个门禁拦的；`tried:` = 试过哪些检索词；检索门禁那条没有 `via:` 行 |
 | 想看打分怎么算的（调阈值前的取证） | `KB_ASK_DEBUG_SCORES=1 KB_PEEK_RAW=1 node peek.mjs '<问题>'` | 末尾 `scores: 第N条 Qn=分值` |

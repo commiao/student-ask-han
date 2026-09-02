@@ -496,10 +496,12 @@ docs 指纹 e772bfd3b181e93e（6 个文件）/ 库基线 ✓ 同版本     ← �
 - 清法只有两条，都要写宿主库：(a) `INSERT INTO kb_fts(kb_fts) VALUES('rebuild')`（+ 可选 `VACUUM` 缩体积，实测 rebuild 本身不缩文件）；(b) 删库文件后从 `out/` 重建——inode 变了，**必须 Cmd+Q 重启**（`openDb()` 常驻 fd 会一直读旧文件，见上面第 6 轮的"不成立/仍未测"那条）。
 - 归属：这是 **dsh-knowledge-base 插件删除路径的缺陷**（删 content 表不同步外部内容索引），不是本预设的。修法在插件侧：删行时补 `INSERT INTO kb_fts(kb_fts, rowid, name, summary, payload, tags) VALUES('delete', …)`，或删后 rebuild。**处置决定：记账，暂不改库**（用户 09-02 深夜拍板），下次停应用重装时顺手做 (a)。
 
-### 工单 G-4：宿主 KB API 现在返回 401，整条 API 写链在这台机器上走不通
+### 工单 G-4：agent 沙箱里探不到宿主端口（**我先前的"API 401"是误读，已当场纠正**）
 
-实测（09-02 21:5x）：`GET http://127.0.0.1:57110/api/kb/list` → **HTTP 401**（第 6 轮同一接口在 52568 上是 `{"matched":8,…}` 裸通）。`probeHost()` 的认端口判据是"响应体以 `{` 开头且含 `"matched"`" → 401 永远过不了 → `doctor` 报"! 没探到宿主端口"，`prune / import / build --apply / ship` 全部无法执行（且报错信息不指向鉴权）。
-**这是 G-3 的 (a)/(b) 两个清法、以及下面"收编新内容"的前置**：要么 `kbctl` 支持带 token（`--token` / `DSH_API_TOKEN`），要么这些动作全部退回"人在界面里做 + 事后 `kb-health.mjs` 对账"。
+- 真实现场（09-02 深夜复测）：`GET http://127.0.0.1:57110/api/kb/list` → **HTTP 200 `{"matched":6,"categories":["新生指南"],…}`**，API 正常。那个 `401` 属于 **43127**——第 6 轮就记过那台是 QQ 的 `Pair your phone again.`，是我把两行输出读串行得到的假结论，**记在这里防止下一轮照着错的下限去改代码**。
+- `doctor` 报"! 没探到宿主端口"的真因不是鉴权：`findHost()` 靠 `execFileSync('lsof'…)` 与 `execFileSync('ps'…)` 提端口，而 **agent 的沙箱拒绝这两个子进程**（实测 `bash: /bin/ps: Operation not permitted`；lsof 同样拿不到）→ 候选只剩 seeded `64685 / 63158 / 43127`，真端口从来没进集合。人在自己终端跑不受影响，所以这条只在"由 agent 代跑运维"时成立。
+- 可用绕法（实测通过）：显式传端口 —— `node kbctl.mjs doctor --port 57110` → `✓ 宿主 API：127.0.0.1:57110（matched=6，分类 ["新生指南"]）`；`prune / import / build --apply` 同理带 `--port`。**结论：收编新 md 的前置条件不存在，正规管线现在就能走。**
+- 待修（运维层，不改判定逻辑）：`findHost()` 在 lsof 与 ps **双双失败**时应明确报"子进程被沙箱拒绝，请显式 `--port` 或设 `DSH_PORT`"，而不是静默退化到 seeded 候选再报一句误导人的"没装 dsh-knowledge-base"；更彻底的做法是从宿主自己的端口/引导文件读真端口（桌面形态有 `window.__DSH_BOOT__` 同源信息）。
 
 ### 工单 G-5：docs 目录口径不一致（真源是 `out/`，不是 `station/docs/`）
 
