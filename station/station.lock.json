@@ -1,14 +1,16 @@
 {
-  "docsHash": "e772bfd3b181e93e",
+  "docsHash": "b026c8abb57a77db",
   "files": [
     "00-总体说明.md",
+    "体检与群务.md",
     "军训安排.md",
+    "团务与资助.md",
     "宿舍生活.md",
     "报到须知.md",
     "缴费与银行卡.md",
     "食堂餐饮.md"
   ],
-  "entries": 6,
-  "builtAt": "2026-09-01T09:51:41.287Z",
+  "entries": 8,
+  "builtAt": "2026-09-03T07:17:00.266Z",
   "host": "api"
 }

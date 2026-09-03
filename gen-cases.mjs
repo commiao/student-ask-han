@@ -34,7 +34,8 @@ function itemsOf(payload) {
   }
   const out = [];
   const clean = (s) => s.trim().replace(/^#+[ \t]*/, '').replace(/[ \t]+/g, ' ');
-  if (marks.length >= 2) {
+  // 与插件 itemsOf() 保持一致：单 Q 文件也必须成为可引用、可生成回归用例的条目。
+  if (marks.length >= 1) {
     for (let i = 0; i < marks.length; i++) {
       const end = i + 1 < marks.length ? marks[i + 1].at : text.length;
       const body = clean(text.slice(marks[i].at, end));

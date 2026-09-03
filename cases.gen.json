@@ -11,29 +11,29 @@
   "topic"
  ],
  "note": "与 cases.human.json（模型手写 5 轴）互补：这份量的是\"改述后还认不认得\"，那份量的是\"口语化后漏不漏\"。两份由 recall.mjs 合并读，永不互写。",
- "itemCount": 37,
- "total": 154,
+ "itemCount": 55,
+ "total": 222,
  "ambiguous": 1,
  "dropped": 0,
  "perRule": {
   "sub1": {
-   "n": 37,
+   "n": 55,
    "amb": 0
   },
   "prefix": {
-   "n": 37,
+   "n": 55,
    "amb": 0
   },
   "bare": {
-   "n": 37,
+   "n": 55,
    "amb": 0
   },
   "tail": {
-   "n": 16,
+   "n": 21,
    "amb": 1
   },
   "whswap": {
-   "n": 21,
+   "n": 30,
    "amb": 0
   },
   "topic": {
@@ -42,6 +42,301 @@
   }
  },
  "items": [
+  {
+   "q": "Q55",
+   "section": "总体说明与关注公众号",
+   "title": "Q55. 学校公众号、服务号上都有什么内容？为什么要提前关注？\n",
+   "variants": [
+    {
+     "id": "Q55-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学校公众号、服务号上都有什么内容？",
+     "expect": "Q55",
+     "section": "总体说明与关注公众号",
+     "residual": "学校公众号服务号内容",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q55-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学校公众号、服务号上都有什么内容？",
+     "expect": "Q55",
+     "section": "总体说明与关注公众号",
+     "residual": "学校公众号服务号内容",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q55-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学校公众号、服务号上都有什么内容",
+     "expect": "Q55",
+     "section": "总体说明与关注公众号",
+     "residual": "学校公众号服务号内容",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q55-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "为什么要提前关注？",
+     "expect": "Q55",
+     "section": "总体说明与关注公众号",
+     "residual": "为要提前关注",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q50",
+   "section": "体检与群务",
+   "title": "Q50. 新生体检要多少钱？怎么缴费？\n",
+   "variants": [
+    {
+     "id": "Q50-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "新生体检要多少钱？",
+     "expect": "Q50",
+     "section": "体检与群务",
+     "residual": "新生体检要钱",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q50-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问新生体检要多少钱？",
+     "expect": "Q50",
+     "section": "体检与群务",
+     "residual": "新生体检要钱",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q50-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "新生体检要多少钱",
+     "expect": "Q50",
+     "section": "体检与群务",
+     "residual": "新生体检要钱",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q50-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "怎么缴费？",
+     "expect": "Q50",
+     "section": "体检与群务",
+     "residual": "缴费",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q50-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "新生体检要费用？",
+     "expect": "Q50",
+     "section": "体检与群务",
+     "residual": "新生体检要费用",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q51",
+   "section": "体检与群务",
+   "title": "Q51. 体检在哪里做？需要假期自己提前去体检吗？\n",
+   "variants": [
+    {
+     "id": "Q51-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "体检在哪里做？",
+     "expect": "Q51",
+     "section": "体检与群务",
+     "residual": "体检做",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q51-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问体检在哪里做？",
+     "expect": "Q51",
+     "section": "体检与群务",
+     "residual": "体检做",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q51-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "体检在哪里做",
+     "expect": "Q51",
+     "section": "体检与群务",
+     "residual": "体检做",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q51-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "需要假期自己提前去体检吗？",
+     "expect": "Q51",
+     "section": "体检与群务",
+     "residual": "需要假期自己提前去体检",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q52",
+   "section": "体检与群务",
+   "title": "Q52. 2026 级各班的辅导员是怎么分工的？\n",
+   "variants": [
+    {
+     "id": "Q52-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "2026 级各班的辅导员是怎么分工的？",
+     "expect": "Q52",
+     "section": "体检与群务",
+     "residual": "2026级各班辅导员分工",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q52-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问2026 级各班的辅导员是怎么分工的？",
+     "expect": "Q52",
+     "section": "体检与群务",
+     "residual": "2026级各班辅导员分工",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q52-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "2026 级各班的辅导员是怎么分工的",
+     "expect": "Q52",
+     "section": "体检与群务",
+     "residual": "2026级各班辅导员分工",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q52-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "2026 级各班的辅导员是如何分工的？",
+     "expect": "Q52",
+     "section": "体检与群务",
+     "residual": "2026级各班辅导员分工",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q53",
+   "section": "体检与群务",
+   "title": "Q53. 新生群的群备注要改成什么格式？\n",
+   "variants": [
+    {
+     "id": "Q53-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "新生群的群备注要改成什么格式？",
+     "expect": "Q53",
+     "section": "体检与群务",
+     "residual": "新生群群备注要改成格式",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q53-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问新生群的群备注要改成什么格式？",
+     "expect": "Q53",
+     "section": "体检与群务",
+     "residual": "新生群群备注要改成格式",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q53-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "新生群的群备注要改成什么格式",
+     "expect": "Q53",
+     "section": "体检与群务",
+     "residual": "新生群群备注要改成格式",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q54",
+   "section": "体检与群务",
+   "title": "Q54. 宿舍床的尺寸是多少？\n",
+   "variants": [
+    {
+     "id": "Q54-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "宿舍床的尺寸是多少？",
+     "expect": "Q54",
+     "section": "体检与群务",
+     "residual": "宿舍床尺寸",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q54-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问宿舍床的尺寸是多少？",
+     "expect": "Q54",
+     "section": "体检与群务",
+     "residual": "宿舍床尺寸",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q54-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "宿舍床的尺寸是多少",
+     "expect": "Q54",
+     "section": "体检与群务",
+     "residual": "宿舍床尺寸",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
   {
    "q": "Q28",
    "section": "军训安排",
@@ -179,6 +474,585 @@
      "expect": "Q30",
      "section": "军训安排",
      "residual": "情况可以免训",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q38",
+   "section": "团务与资助",
+   "title": "Q38. 团组织关系具体转到哪个团支部？\n",
+   "variants": [
+    {
+     "id": "Q38-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "团组织关系具体转到哪个团支部？",
+     "expect": "Q38",
+     "section": "团务与资助",
+     "residual": "团组织关系具体转到哪团支部",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q38-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问团组织关系具体转到哪个团支部？",
+     "expect": "Q38",
+     "section": "团务与资助",
+     "residual": "团组织关系具体转到哪团支部",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q38-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "团组织关系具体转到哪个团支部",
+     "expect": "Q38",
+     "section": "团务与资助",
+     "residual": "团组织关系具体转到哪团支部",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q39",
+   "section": "团务与资助",
+   "title": "Q39. 转团组织关系时搜不到自己的班级怎么办？\n",
+   "variants": [
+    {
+     "id": "Q39-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "转团组织关系时搜不到自己的班级怎么办？",
+     "expect": "Q39",
+     "section": "团务与资助",
+     "residual": "转团组织关系时搜不到自己班级办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q39-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问转团组织关系时搜不到自己的班级怎么办？",
+     "expect": "Q39",
+     "section": "团务与资助",
+     "residual": "转团组织关系时搜不到自己班级办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q39-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "转团组织关系时搜不到自己的班级怎么办",
+     "expect": "Q39",
+     "section": "团务与资助",
+     "residual": "转团组织关系时搜不到自己班级办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q39-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "转团组织关系时搜不到自己的班级如何办？",
+     "expect": "Q39",
+     "section": "团务与资助",
+     "residual": "转团组织关系时搜不到自己班级办",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q40",
+   "section": "团务与资助",
+   "title": "Q40. 团组织关系不小心转到了校团委或学院团总支怎么办？\n",
+   "variants": [
+    {
+     "id": "Q40-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "团组织关系不小心转到了校团委或学院团总支怎么办？",
+     "expect": "Q40",
+     "section": "团务与资助",
+     "residual": "团组织关系不心转到校团委或学院团总支办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q40-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问团组织关系不小心转到了校团委或学院团总支怎么办？",
+     "expect": "Q40",
+     "section": "团务与资助",
+     "residual": "团组织关系不心转到校团委或学院团总支办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q40-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "团组织关系不小心转到了校团委或学院团总支怎么办",
+     "expect": "Q40",
+     "section": "团务与资助",
+     "residual": "团组织关系不心转到校团委或学院团总支办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q40-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "团组织关系不小心转到了校团委或学院团总支如何办？",
+     "expect": "Q40",
+     "section": "团务与资助",
+     "residual": "团组织关系不心转到校团委或学院团总支办",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q41",
+   "section": "团务与资助",
+   "title": "Q41. 高中当过团支书，团组织关系转不出来怎么办？\n",
+   "variants": [
+    {
+     "id": "Q41-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "高中当过团支书，团组织关系转不出来怎么办？",
+     "expect": "Q41",
+     "section": "团务与资助",
+     "residual": "高中当过团支书团组织关系转不出来办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q41-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问高中当过团支书，团组织关系转不出来怎么办？",
+     "expect": "Q41",
+     "section": "团务与资助",
+     "residual": "高中当过团支书团组织关系转不出来办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q41-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "高中当过团支书，团组织关系转不出来怎么办",
+     "expect": "Q41",
+     "section": "团务与资助",
+     "residual": "高中当过团支书团组织关系转不出来办",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q41-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "高中当过团支书，团组织关系转不出来如何办？",
+     "expect": "Q41",
+     "section": "团务与资助",
+     "residual": "高中当过团支书团组织关系转不出来办",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q42",
+   "section": "团务与资助",
+   "title": "Q42. 学费在网上怎么缴？入口在哪里？\n",
+   "variants": [
+    {
+     "id": "Q42-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "学费在网上怎么缴？",
+     "expect": "Q42",
+     "section": "团务与资助",
+     "residual": "学费网缴",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q42-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问学费在网上怎么缴？",
+     "expect": "Q42",
+     "section": "团务与资助",
+     "residual": "学费网缴",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q42-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "学费在网上怎么缴",
+     "expect": "Q42",
+     "section": "团务与资助",
+     "residual": "学费网缴",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q42-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "入口在哪里？",
+     "expect": "Q42",
+     "section": "团务与资助",
+     "residual": "入口",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q42-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "学费在网上如何缴？",
+     "expect": "Q42",
+     "section": "团务与资助",
+     "residual": "学费网缴",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q43",
+   "section": "团务与资助",
+   "title": "Q43. 办理生源地贷款后，学费如何处理？\n",
+   "variants": [
+    {
+     "id": "Q43-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "办理生源地贷款后，学费如何处理？",
+     "expect": "Q43",
+     "section": "团务与资助",
+     "residual": "办理生源地贷款后学费处理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q43-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问办理生源地贷款后，学费如何处理？",
+     "expect": "Q43",
+     "section": "团务与资助",
+     "residual": "办理生源地贷款后学费处理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q43-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "办理生源地贷款后，学费如何处理",
+     "expect": "Q43",
+     "section": "团务与资助",
+     "residual": "办理生源地贷款后学费处理",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q44",
+   "section": "团务与资助",
+   "title": "Q44. 校园地助学贷款能否在本校现场办理？\n",
+   "variants": [
+    {
+     "id": "Q44-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "校园地助学贷款能否在本校现场办理？",
+     "expect": "Q44",
+     "section": "团务与资助",
+     "residual": "校园地助学贷款能否本校现场办理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q44-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问校园地助学贷款能否在本校现场办理？",
+     "expect": "Q44",
+     "section": "团务与资助",
+     "residual": "校园地助学贷款能否本校现场办理",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q44-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "校园地助学贷款能否在本校现场办理",
+     "expect": "Q44",
+     "section": "团务与资助",
+     "residual": "校园地助学贷款能否本校现场办理",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q45",
+   "section": "团务与资助",
+   "title": "Q45. 申请国家助学金、新生圆梦助学金第一步做什么？\n",
+   "variants": [
+    {
+     "id": "Q45-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "申请国家助学金、新生圆梦助学金第一步做什么？",
+     "expect": "Q45",
+     "section": "团务与资助",
+     "residual": "申请国家助学金新生圆梦助学金第一步做",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q45-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问申请国家助学金、新生圆梦助学金第一步做什么？",
+     "expect": "Q45",
+     "section": "团务与资助",
+     "residual": "申请国家助学金新生圆梦助学金第一步做",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q45-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "申请国家助学金、新生圆梦助学金第一步做什么",
+     "expect": "Q45",
+     "section": "团务与资助",
+     "residual": "申请国家助学金新生圆梦助学金第一步做",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q46",
+   "section": "团务与资助",
+   "title": "Q46. 家庭经济困难认定要准备哪些佐证材料？\n",
+   "variants": [
+    {
+     "id": "Q46-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "家庭经济困难认定要准备哪些佐证材料？",
+     "expect": "Q46",
+     "section": "团务与资助",
+     "residual": "家庭经济困难认定要准备哪佐证材料",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q46-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问家庭经济困难认定要准备哪些佐证材料？",
+     "expect": "Q46",
+     "section": "团务与资助",
+     "residual": "家庭经济困难认定要准备哪佐证材料",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q46-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "家庭经济困难认定要准备哪些佐证材料",
+     "expect": "Q46",
+     "section": "团务与资助",
+     "residual": "家庭经济困难认定要准备哪佐证材料",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q47",
+   "section": "团务与资助",
+   "title": "Q47. 家庭贫困证明可以让村里开吗？\n",
+   "variants": [
+    {
+     "id": "Q47-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "家庭贫困证明可以让村里开吗？",
+     "expect": "Q47",
+     "section": "团务与资助",
+     "residual": "家庭贫困证明可以让村里开",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q47-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问家庭贫困证明可以让村里开吗？",
+     "expect": "Q47",
+     "section": "团务与资助",
+     "residual": "家庭贫困证明可以让村里开",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q47-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "家庭贫困证明可以让村里开",
+     "expect": "Q47",
+     "section": "团务与资助",
+     "residual": "家庭贫困证明可以让村里开",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q47-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "家庭贫困证明可以让村里开不？",
+     "expect": "Q47",
+     "section": "团务与资助",
+     "residual": "家庭贫困证明可以让村里开不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q48",
+   "section": "团务与资助",
+   "title": "Q48. 佐证材料凑不齐但家里确实困难，还能申请吗？\n",
+   "variants": [
+    {
+     "id": "Q48-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "佐证材料凑不齐但家里确实困难，还能申请吗？",
+     "expect": "Q48",
+     "section": "团务与资助",
+     "residual": "佐证材料凑不齐但家里确实困难能申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q48-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问佐证材料凑不齐但家里确实困难，还能申请吗？",
+     "expect": "Q48",
+     "section": "团务与资助",
+     "residual": "佐证材料凑不齐但家里确实困难能申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q48-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "佐证材料凑不齐但家里确实困难，还能申请",
+     "expect": "Q48",
+     "section": "团务与资助",
+     "residual": "佐证材料凑不齐但家里确实困难能申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q48-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "佐证材料凑不齐但家里确实困难，还能申请不？",
+     "expect": "Q48",
+     "section": "团务与资助",
+     "residual": "佐证材料凑不齐但家里确实困难能申请不",
+     "ambiguous": false,
+     "colliders": []
+    }
+   ]
+  },
+  {
+   "q": "Q49",
+   "section": "团务与资助",
+   "title": "Q49. 勤工助学岗位怎么申请？一个人能报几个岗位？\n",
+   "variants": [
+    {
+     "id": "Q49-sub1",
+     "axis": "sub1",
+     "rule": "sub1",
+     "question": "勤工助学岗位怎么申请？",
+     "expect": "Q49",
+     "section": "团务与资助",
+     "residual": "勤工助学岗位申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q49-prefix",
+     "axis": "prefix",
+     "rule": "prefix",
+     "question": "请问勤工助学岗位怎么申请？",
+     "expect": "Q49",
+     "section": "团务与资助",
+     "residual": "勤工助学岗位申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q49-bare",
+     "axis": "bare",
+     "rule": "bare",
+     "question": "勤工助学岗位怎么申请",
+     "expect": "Q49",
+     "section": "团务与资助",
+     "residual": "勤工助学岗位申请",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q49-tail",
+     "axis": "tail",
+     "rule": "tail",
+     "question": "一个人能报几个岗位？",
+     "expect": "Q49",
+     "section": "团务与资助",
+     "residual": "一人能报几岗位",
+     "ambiguous": false,
+     "colliders": []
+    },
+    {
+     "id": "Q49-whswap",
+     "axis": "whswap",
+     "rule": "whswap",
+     "question": "勤工助学岗位如何申请？",
+     "expect": "Q49",
+     "section": "团务与资助",
+     "residual": "勤工助学岗位申请",
      "ambiguous": false,
      "colliders": []
     }
@@ -1468,7 +2342,7 @@
   {
    "q": "Q10",
    "section": "报到须知",
-   "title": "Q10. 助学贷款怎么办理？报到时能现场办吗？\n",
+   "title": "Q10. 助学贷款怎么办理？生源地贷款能在报到时现场办吗？\n",
    "variants": [
     {
      "id": "Q10-sub1",
@@ -1507,10 +2381,10 @@
      "id": "Q10-tail",
      "axis": "tail",
      "rule": "tail",
-     "question": "报到时能现场办吗？",
+     "question": "生源地贷款能在报到时现场办吗？",
      "expect": "Q10",
      "section": "报到须知",
-     "residual": "报到时能现场办",
+     "residual": "生源地贷款能报到时现场办",
      "ambiguous": false,
      "colliders": []
     },
