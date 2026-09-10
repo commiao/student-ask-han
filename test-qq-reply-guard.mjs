@@ -32,7 +32,22 @@ assert.equal(
   '@白开水 你问的「新生圆梦」：\n① 答案',
   '不能依赖枚举每一种模型英文措辞',
 );
+assert.equal(
+  sanitizeQqReply(', meaning I should reproduce it exactly as provided without any modifications.@白开水 你问的「党关系」：\n① 答案'),
+  '@白开水 你问的「党关系」：\n① 答案',
+  '英文元说明即使以标点开头也必须删除',
+);
 assert.equal(stripModelMetaPreamble('① 正常答案不应修改'), '① 正常答案不应修改');
+assert.equal(
+  sanitizeQqReply('@Alice 你问的「党关系」：\n① 答案'),
+  '@Alice 你问的「党关系」：\n① 答案',
+  'ASCII 昵称开头的正常固定标题不得被删除',
+);
+assert.equal(
+  sanitizeQqReply('说明：@白开水 你问的「党关系」：\n① 答案'),
+  '说明：@白开水 你问的「党关系」：\n① 答案',
+  '包含中文的业务前缀不得被当作模型元说明删除',
+);
 
 assert.equal(
   sanitizeQqReply("I need to copy the reply verbatim as instructed, so I'll reproduce it exactly as provided.@白开水 你问的「新生圆梦\n新生圆梦」：\n① 答案"),
@@ -78,6 +93,17 @@ assert.ok(patchedV47.source.includes(DSH_IM_GUARD_MARK));
 assert.ok(patchedV47.source.includes('V=(q.length>0?`${G}---${q.join("\\n")}`:G).replace('));
 assert.doesNotThrow(() => new Function(patchedV47.source), '写入 4.7.0 bundle 的片段必须能被 Node 解析');
 assert.equal(patchDshImQqDelivery(patchedV47.source).changed, false, '4.7.0 重复执行不得二次改写');
+
+const v3EnglishMetaBeforeKbHeader = /^\s*[A-Za-z][^\u3400-\u9fff]{0,399}(?=@[^\r\n]{1,64} 你问的「)/u;
+const v3GuardMark = '/* student-ask-han-qq-reply-guard:v3 */';
+const v3FixtureV47 = 'async function delivery(){let q=[],z,H=[];let G=sFe(z,H),V=(q.length>0?`${G}---${q.join("\\n")}`:G).replace('
+  + `${META_PREAMBLE},"").replace(${v3EnglishMetaBeforeKbHeader},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${v3GuardMark},U=null,N=null;try{let ie=await CZ(bot,target,V,{logger})}catch{}}`;
+const upgradedV3 = patchDshImQqDelivery(v3FixtureV47);
+assert.equal(upgradedV3.changed, true, '已部署的 v3 guard 必须升级以清理标点开头的元说明');
+assert.ok(upgradedV3.source.includes(DSH_IM_GUARD_MARK));
+assert.ok(upgradedV3.source.includes(`.replace(${ENGLISH_META_BEFORE_KB_HEADER},"")`));
+assert.ok(!upgradedV3.source.includes(v3GuardMark));
+assert.doesNotThrow(() => new Function(upgradedV3.source), '升级 v3 bundle 后仍须可解析');
 
 const v2GuardMark = '/* student-ask-han-qq-reply-guard:v2 */';
 const v2FixtureV47 = 'async function delivery(){let q=[],z,H=[];let G=sFe(z,H),V=(q.length>0?`${G}---${q.join("\\n")}`:G).replace('
