@@ -49,5 +49,5 @@ Get-ChildItem $dst | Format-Table Name, Length -AutoSize
   2) 设置 → IM 机器人 → 你的 bot → 打开「群聊上下文增强」，字段勾 senderName。
   3) 在该 bot 的设置中选择 kb-qa，并从新会话发送「宿舍晚上断电吗」。
      不要把 /preset 或 /new 当作群内运维命令：当前 dsh-im 未按发送者限制这些命令。
-  4) 期望首行 @你的昵称 你问的「宿舍晚上断电吗」：，并带（指南·宿舍生活 第8条 Q20）。
+  4) 期望首行 @你的昵称：，并带（指南·宿舍生活 第8条 Q20）。
 '@
