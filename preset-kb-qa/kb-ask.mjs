@@ -660,11 +660,11 @@ export function apply(ctx, config) {
       // dsh-im 的 contextEnhancement 会把来源元数据前缀在正文里。这是元数据不是提问内容：
       // 先摘出来，既拿到点名对象，也避免 JSON 花括号污染检索与行为门禁。
       ({ question, asker } = separateSourceMetadata(question, asker));
-      // 不回显原问题：群里原消息已经可见，回显既冗余，又会把模型误传的运行时内容带进最终回复。
-      const attn = asker === '' ? '' : `@${asker}：\n`;
+      // 保持群内既有的归属格式；这里使用已剥离来源元数据后的 question，避免运行时 JSON 回显。
+      const attn = asker === '' ? '' : `@${asker} 你问的「${question}」：\n\n`;
 
       /**
-       * REFUSE 统一出口。reply 现在可能占两行（归属行 + 固定话术），所以诊断行一律排在 reply
+       * REFUSE 统一出口。reply 现在可能占三行（归属行、空行、固定话术），所以诊断行一律排在 reply
        * **之前**，让 reply 成为输出最后一段——夹在中间会被模型连着"via:"一起抄进群消息。
        * 固定话术 `该问题超出范围了，请联系管理员` 一字不改，也不在其后追加任何解释。
        */

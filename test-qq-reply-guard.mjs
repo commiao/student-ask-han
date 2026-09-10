@@ -1,45 +1,30 @@
 import assert from 'node:assert/strict';
-import { installQqReplyGuard, stripModelMetaPreamble } from './station/qq-reply-guard.mjs';
-
-class FakeQqBot {
-  constructor(accountId) { this.accountId = accountId; }
-  async send(payload) { this.sent = payload; return payload; }
-}
-
-const state = JSON.stringify({ agentPresets: { 'kb-bot': 'kb-qa', 'other-bot': 'default' } });
-const remove = installQqReplyGuard(FakeQqBot, {
-  workspaceFile: '/state/workspaces.json',
-  readFile: (file) => {
-    assert.equal(file, '/state/workspaces.json');
-    return state;
-  },
-  logger: { info() {} },
-});
+import {
+  DSH_IM_GUARD_MARK,
+  patchDshImQqDelivery,
+  stripModelMetaPreamble,
+} from './station/qq-reply-guard.mjs';
 
 assert.equal(
-  stripModelMetaPreamble("I'm being asked to copy the reply verbatim as instructed.@白开水："),
-  '@白开水：',
+  stripModelMetaPreamble("I'm being asked to copy the reply verbatim as instructed.@白开水 你问的「新生圆梦」："),
+  '@白开水 你问的「新生圆梦」：',
 );
-const kbBot = new FakeQqBot('kb-bot');
-await kbBot.send({
-  msgType: 2,
-  markdown: { content: "I'm being asked to copy the reply verbatim as instructed.@白开水：\n① 答案" },
-});
-assert.equal(kbBot.sent.markdown.content, '@白开水：\n① 答案');
+assert.equal(
+  stripModelMetaPreamble("I'm copying the reply verbatim as requested.\n@白开水 你问的「群备注怎么改」："),
+  '@白开水 你问的「群备注怎么改」：',
+);
+assert.equal(stripModelMetaPreamble('① 正常答案不应修改'), '① 正常答案不应修改');
 
-const fallback = new FakeQqBot('kb-bot');
-await fallback.send({
-  msgType: 0,
-  content: "I'm copying the reply verbatim as requested.\n@白开水：\n① 答案",
-});
-assert.equal(fallback.sent.content, '@白开水：\n① 答案');
+const fixture = 'function delivery(){let H=[],j,F;let q=MRe(j,F),J=H.length>0?`${q}---${H.join("\\n")}`:q,x=null,P=null;try{send(J)}catch{}}';
+const patched = patchDshImQqDelivery(fixture);
+assert.equal(patched.changed, true);
+assert.ok(patched.source.includes(DSH_IM_GUARD_MARK));
+assert.ok(patched.source.includes('J=(H.length>0?`${q}---${H.join("\\n")}`:q).replace('));
+assert.doesNotThrow(() => new Function(patched.source), '写入 bundle 的片段必须能被 Node 解析');
+assert.equal(patchDshImQqDelivery(patched.source).changed, false, '重复执行不得二次改写');
+assert.throws(
+  () => patchDshImQqDelivery('let q=MRe(j,F),J=answer:q,x=null,P=null;try{ one let q=MRe(j,F),J=answer:q,x=null,P=null;try{'),
+  /anchor changed/,
+);
 
-const other = new FakeQqBot('other-bot');
-await other.send({
-  msgType: 2,
-  markdown: { content: "I'm being asked to copy the reply verbatim as instructed.@其他人：" },
-});
-assert.match(other.sent.markdown.content, /^I'm being asked/);
-
-remove();
-console.log('QQ reply guard checks passed');
+console.log('QQ final-delivery guard: PASS');
