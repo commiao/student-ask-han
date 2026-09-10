@@ -45,7 +45,10 @@ check("kb-ask.mjs 有 inject 声明", /export const inject = \['tools'\];/.test(
   "缺了 apply() 在挂载期就抛 cannot get property \"tools\" without inject");
 check('roster 里有 kb-ask 行且指向本地插件', /- id: kb-ask/.test(yml) && /name: \.\/kb-ask\.mjs/.test(yml));
 check('固定话术逐字未被改动', new RegExp(`refusal: '${REFUSAL}'`).test(yml), '改了话术 = test-kb-ask 的形状断言与线上口径分叉');
-check('persona 仍要求逐字照抄 reply', /逐字等于/.test(yml));
+check(
+  'persona 仍要求只输出 reply 且禁止英语元说明',
+  /最终消息只能输出它给出的 reply 正文/.test(yml) && /不得输出处理状态、说明、引号或英语句子/.test(yml),
+);
 check('persona 未挂载外部知识工具', !/web_search|dsh-knowledge-base/.test(yml.replace(/^[^:]*#.*$/gm, '')),
   '一旦挂上联网/写库工具，闭卷性质就不成立了');
 check('preset.yml 有 order 与 name', /order:/.test(presetYml) && /name:/.test(presetYml));

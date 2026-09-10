@@ -17,7 +17,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, statSync, copyFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { patchDshImQqDelivery } from './qq-reply-guard.mjs';
+import { patchDshImQqDelivery, selectDshImBundle } from './qq-reply-guard.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);                       // 交付包里的 kb/ 根
@@ -494,7 +494,16 @@ function cmdImReplyGuard() {
   const profile = arg('profile', 'web');
   if (!root) fail('定位不到 DSH 根，用 --root <DSH_HOME> 指定');
   const profileFile = join(root, 'profiles', profile, 'cordis.patch.yml');
-  const file = arg('dsh-im-file', `/opt/dsh-seed/profiles/${profile}/node_modules/@xmanrui/dsh-im/lib/index.js`);
+  // DSH 会把升级后的 profile 依赖保存在 $DSH_HOME；它才是运行时实际加载的副本。
+  // 镜像中的 /opt/dsh-seed 只是首次初始化种子，只在持久化副本不存在时回退。
+  const activeFile = join(root, 'profiles', profile, 'node_modules/@xmanrui/dsh-im/lib/index.js');
+  const seedFile = `/opt/dsh-seed/profiles/${profile}/node_modules/@xmanrui/dsh-im/lib/index.js`;
+  const file = selectDshImBundle({
+    explicitFile: arg('dsh-im-file'),
+    activeFile,
+    seedFile,
+    exists: existsSync,
+  });
   if (!existsSync(file)) fail(`找不到 dsh-im QQ 投递包：${file}`);
   const source = readFileSync(file, 'utf8');
   let result;

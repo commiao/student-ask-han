@@ -20,18 +20,22 @@ export function sanitizeQqReply(text) {
     : text;
 }
 
+export function selectDshImBundle({ explicitFile, activeFile, seedFile, exists }) {
+  if (explicitFile) return explicitFile;
+  return exists(activeFile) ? activeFile : seedFile;
+}
+
 /**
- * dsh-im 3.1.1 将 QQ SDK 内联进自己的 bundle；外部 import 同名 SDK 再改 prototype
- * 不能触及它实际调用的类。这里按已核验的最终投递语句，给发送前的 J 加一个窄清洗。
+ * dsh-im 将 QQ SDK 内联进自己的 bundle；外部 import 同名 SDK 再改 prototype
+ * 不能触及它实际调用的类。这里按已核验的最终投递语句，在发送前做窄清洗。
  *
- * 只能命中一次才写入，升级后 bundle 结构变化会安全失败，而不是猜测性改写。
+ * 只能命中一个已知版本的一处锚点才写入，升级后 bundle 结构变化会安全失败，
+ * 而不是猜测性改写。
  */
 export function patchDshImQqDelivery(source) {
   if (typeof source !== 'string') throw new TypeError('dsh-im bundle must be a string');
   if (source.includes(DSH_IM_GUARD_MARK)) return { source, changed: false };
 
-  const head = 'let q=MRe(j,F),J=';
-  const tail = ':q,x=null,P=null;try{';
   const count = (needle) => source.split(needle).length - 1;
   const guard = (expression) => `${expression}.replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK}`;
 
@@ -39,6 +43,7 @@ export function patchDshImQqDelivery(source) {
   // 仅接受 v1 自己生成的精确片段；不匹配就安全失败，绝不猜测性改写第三方 bundle。
   const legacyCleanup = `.replace(${LEGACY_META_PREAMBLE},"")${LEGACY_DSH_IM_GUARD_MARK}`;
   if (source.includes(LEGACY_DSH_IM_GUARD_MARK)) {
+    const head = 'let q=MRe(j,F),J=';
     if (count(head) !== 1 || count(legacyCleanup) !== 1) {
       throw new Error('dsh-im QQ legacy guard shape changed; refusing to upgrade');
     }
@@ -53,9 +58,17 @@ export function patchDshImQqDelivery(source) {
     return { source: `${before}${guard(expression)}${source.slice(afterAt)}`, changed: true };
   }
 
-  if (count(head) !== 1 || count(tail) !== 1) {
+  const anchors = [
+    // dsh-im 4.7.0：V 是文本与工具告警合并后的最终 QQ 文本，随后交给 CZ 分片发送。
+    { head: 'let G=sFe(z,H),V=', tail: ',U=null,N=null;try{', outputTail: ',U=null,N=null;try{', completeExpression: true },
+    // dsh-im 3.1.1：tail 从三元表达式的 else 分支开始。
+    { head: 'let q=MRe(j,F),J=', tail: ':q,x=null,P=null;try{', outputTail: ',x=null,P=null;try{', completeExpression: false },
+  ];
+  const matches = anchors.filter(({ head, tail }) => count(head) === 1 && count(tail) === 1);
+  if (matches.length !== 1) {
     throw new Error('dsh-im QQ final-delivery anchor changed; refusing to patch');
   }
+  const { head, tail, outputTail, completeExpression } = matches[0];
   const headAt = source.indexOf(head);
   const tailAt = source.indexOf(tail, headAt + head.length);
   if (tailAt < 0) throw new Error('dsh-im QQ final-delivery anchor is out of order; refusing to patch');
@@ -63,7 +76,8 @@ export function patchDshImQqDelivery(source) {
   const before = source.slice(0, headAt + head.length);
   const expression = source.slice(headAt + head.length, tailAt);
   const after = source.slice(tailAt + tail.length);
-  const patched = `${before}${guard(`(${expression}:q)`)},x=null,P=null;try{${after}`;
+  const guardedExpression = completeExpression ? `(${expression})` : `(${expression}:q)`;
+  const patched = `${before}${guard(guardedExpression)}${outputTail}${after}`;
   return { source: patched, changed: true };
 }
 

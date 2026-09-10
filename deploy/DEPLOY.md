@@ -114,7 +114,8 @@ sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-persona
 sudo docker restart dsh-personal
 ```
 
-它仅作用于 `workspaces.json` 中预设为 `kb-qa` 的 QQ bot，并只移除开头已知的英文元说明；其他 bot 和知识库正文不变。
+它作用于此 DSH 实例的 QQ 最终投递，并只移除开头已知的英文元说明；知识库正文不变。
+命令会优先修改 `$DSH_HOME/profiles/web` 中运行时实际加载的 dsh-im；仅当该持久化副本不存在时，才回退到镜像种子目录 `/opt/dsh-seed`。
 
 ### 5. 最后在 NAS DSH 中绑定 QQ
 
