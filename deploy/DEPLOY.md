@@ -114,7 +114,7 @@ sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-persona
 sudo docker restart dsh-personal
 ```
 
-它作用于此 DSH 实例的 QQ 最终投递，并只移除开头已知的英文元说明；知识库正文不变。
+它作用于此 DSH 实例的 QQ 最终投递：除已知句式外，还会删除紧邻 `@昵称 你问的「…」` 固定标题之前、最长 400 字符的英文元说明；知识库正文不变。
 命令会优先修改 `$DSH_HOME/profiles/web` 中运行时实际加载的 dsh-im；仅当该持久化副本不存在时，才回退到镜像种子目录 `/opt/dsh-seed`。
 
 ### 5. 最后在 NAS DSH 中绑定 QQ

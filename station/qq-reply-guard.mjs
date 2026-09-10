@@ -1,14 +1,18 @@
 export const name = 'kb-qa-qq-reply-guard';
 
-// 模型偶发把“转发工具回复”的内部说明也输出。只删已观测到的英文元说明，
-// 不做宽泛的自然语言清洗，避免误改知识库的正常答案。
+// 模型偶发把“转发工具回复”的内部说明也输出。保留已观测句式用于兼容
+// 无标题回复；带 kb-qa 固定标题的回复另由结构规则清理，避免依赖模型措辞。
 export const META_PREAMBLE = /^\s*(?:i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?|i need to copy (?:the )?reply verbatim(?: as (?:requested|instructed))?(?:,\s*so i(?:'|’)ll reproduce it exactly as provided)?)\.?\s*/i;
+// 不再枚举每个模型的英文措辞：当短英文段落后紧跟 kb-qa 固定标题时，
+// 该段只能是模型泄露的操作说明。中文前缀不匹配，且最多清理 400 字符。
+export const ENGLISH_META_BEFORE_KB_HEADER = /^\s*[A-Za-z][^\u3400-\u9fff]{0,399}(?=@[^\r\n]{1,64} 你问的「)/u;
 // 某些模型会在照抄工具 reply 时，把标题里的原问题连续复制两次。只归一化
 // 完全相同、紧邻、且位于固定 QQ 标题结构中的两行，正常多行问题保持原样。
 export const DUPLICATED_QUESTION_ECHO = /^(@[^\r\n]{1,64} 你问的「)([^\r\n]+)\r?\n\2(」：)/;
 const LEGACY_META_PREAMBLE = /^\s*i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?\.?\s*/i;
 const LEGACY_DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard */';
-export const DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard:v2 */';
+const V2_DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard:v2 */';
+export const DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard:v3 */';
 
 export function stripModelMetaPreamble(text) {
   return typeof text === 'string' ? text.replace(META_PREAMBLE, '') : text;
@@ -16,7 +20,9 @@ export function stripModelMetaPreamble(text) {
 
 export function sanitizeQqReply(text) {
   return typeof text === 'string'
-    ? stripModelMetaPreamble(text).replace(DUPLICATED_QUESTION_ECHO, '$1$2$3')
+    ? stripModelMetaPreamble(text)
+      .replace(ENGLISH_META_BEFORE_KB_HEADER, '')
+      .replace(DUPLICATED_QUESTION_ECHO, '$1$2$3')
     : text;
 }
 
@@ -37,7 +43,18 @@ export function patchDshImQqDelivery(source) {
   if (source.includes(DSH_IM_GUARD_MARK)) return { source, changed: false };
 
   const count = (needle) => source.split(needle).length - 1;
-  const guard = (expression) => `${expression}.replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK}`;
+  const cleanup = `.replace(${META_PREAMBLE},"").replace(${ENGLISH_META_BEFORE_KB_HEADER},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK}`;
+  const guard = (expression) => `${expression}${cleanup}`;
+
+  // v2 只枚举了当时见过的三种固定句式。精确替换本项目生成的清洗尾缀，
+  // 使已经部署的 3.1.1 / 4.7.0 bundle 都能原位升级，不触碰第三方逻辑。
+  const v2Cleanup = `.replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${V2_DSH_IM_GUARD_MARK}`;
+  if (source.includes(V2_DSH_IM_GUARD_MARK)) {
+    if (count(v2Cleanup) !== 1) {
+      throw new Error('dsh-im QQ v2 guard shape changed; refusing to upgrade');
+    }
+    return { source: source.replace(v2Cleanup, cleanup), changed: true };
+  }
 
   // v1 的标记会让旧逻辑提前返回，导致已部署的 bundle 永远收不到后续规则。
   // 仅接受 v1 自己生成的精确片段；不匹配就安全失败，绝不猜测性改写第三方 bundle。

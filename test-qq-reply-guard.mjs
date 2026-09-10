@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {
   DSH_IM_GUARD_MARK,
   DUPLICATED_QUESTION_ECHO,
+  ENGLISH_META_BEFORE_KB_HEADER,
+  META_PREAMBLE,
   patchDshImQqDelivery,
   sanitizeQqReply,
   selectDshImBundle,
@@ -19,6 +21,16 @@ assert.equal(
 assert.equal(
   stripModelMetaPreamble("I need to copy the reply verbatim as instructed, so I'll reproduce it exactly as provided.@白开水 你问的「新生圆梦」："),
   '@白开水 你问的「新生圆梦」：',
+);
+assert.equal(
+  sanitizeQqReply("I should follow the instruction to output the reply content exactly as it appears in the tool output.\n@白开水 你问的「什么时候放暑假」：\n该问题超出范围了，请联系管理员"),
+  '@白开水 你问的「什么时候放暑假」：\n该问题超出范围了，请联系管理员',
+  '模型更换后出现的新英文元说明也必须在发送前删除',
+);
+assert.equal(
+  sanitizeQqReply('The requested answer follows below.\n@白开水 你问的「新生圆梦」：\n① 答案'),
+  '@白开水 你问的「新生圆梦」：\n① 答案',
+  '不能依赖枚举每一种模型英文措辞',
 );
 assert.equal(stripModelMetaPreamble('① 正常答案不应修改'), '① 正常答案不应修改');
 
@@ -66,6 +78,16 @@ assert.ok(patchedV47.source.includes(DSH_IM_GUARD_MARK));
 assert.ok(patchedV47.source.includes('V=(q.length>0?`${G}---${q.join("\\n")}`:G).replace('));
 assert.doesNotThrow(() => new Function(patchedV47.source), '写入 4.7.0 bundle 的片段必须能被 Node 解析');
 assert.equal(patchDshImQqDelivery(patchedV47.source).changed, false, '4.7.0 重复执行不得二次改写');
+
+const v2GuardMark = '/* student-ask-han-qq-reply-guard:v2 */';
+const v2FixtureV47 = 'async function delivery(){let q=[],z,H=[];let G=sFe(z,H),V=(q.length>0?`${G}---${q.join("\\n")}`:G).replace('
+  + `${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${v2GuardMark},U=null,N=null;try{let ie=await CZ(bot,target,V,{logger})}catch{}}`;
+const upgradedV2 = patchDshImQqDelivery(v2FixtureV47);
+assert.equal(upgradedV2.changed, true, '已部署的 v2 guard 必须升级到结构化英文前缀清理');
+assert.ok(upgradedV2.source.includes(DSH_IM_GUARD_MARK));
+assert.ok(upgradedV2.source.includes(`.replace(${ENGLISH_META_BEFORE_KB_HEADER},"")`));
+assert.ok(!upgradedV2.source.includes(v2GuardMark));
+assert.doesNotThrow(() => new Function(upgradedV2.source), '升级 v2 bundle 后仍须可解析');
 
 const legacyGuardMark = '/* student-ask-han-qq-reply-guard */';
 const legacyPreamble = /^\s*i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?\.?\s*/i;
