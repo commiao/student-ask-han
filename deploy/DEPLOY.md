@@ -104,6 +104,18 @@ sudo docker restart dsh-personal
 
 当前 dsh-im 4.7 的群聊昵称上下文是按 bot 保存在 `workspaces.json` 的状态，**没有**和 `agentPreset` 对等的全局默认配置。因此新 bot 仍应在设置 → IM 机器人里打开「群聊上下文增强」，字段选 `senderId`、`senderName`。这不影响它默认走 `kb-qa`；只影响回复能否带上提问人的群昵称。
 
+### 4.1 固化 QQ 输出边界
+
+部分模型会在正式答案前添加英文“正在转发”的元说明。提示词不能可靠阻止这种输出，因此 NAS 首次部署还应启用发送侧保护：
+
+```sh
+sudo docker exec -e DSH_HOME=/data/dsh -w /workspace/student-ask-han dsh-personal \
+  node station/kbctl.mjs im-reply-guard --apply
+sudo docker restart dsh-personal
+```
+
+它仅作用于 `workspaces.json` 中预设为 `kb-qa` 的 QQ bot，并只移除开头已知的英文元说明；其他 bot 和知识库正文不变。
+
 ### 5. 最后在 NAS DSH 中绑定 QQ
 
 打开 NAS 的 DSH Web 设置 → IM 机器人，绑定**仅供 NAS 使用的 QQ 机器人**；不要复用 Mac Desktop 已连接的同一个机器人。第 4 步已使它默认绑定 `kb-qa`。打开群聊上下文增强并勾选 `senderId`、`senderName`。若这里尚未绑定 QQ 或模型提供方，代码、预设和知识库虽已部署，但还不会对群消息做真实模型回复。

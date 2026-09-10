@@ -484,6 +484,41 @@ function cmdImDefaults() {
   console.log('群昵称上下文仍须按 bot 在 IM 设置中启用；当前 dsh-im 没有全局默认配置。');
 }
 
+// ──────────────────────── im-reply-guard ─────────────────────────
+// persona 只能要求模型不要输出“正在转发”的元说明，不能强制它服从。这个宿主插件
+// 在 dsh-im 最终调用 QQ SDK.send() 前过滤已确认的前缀，并按 workspaces.json 只作用 kb-qa。
+function cmdImReplyGuard() {
+  const r = harnessRoots();
+  const root = arg('root') || r.picked;
+  const profile = arg('profile', 'web');
+  if (!root) fail('定位不到 DSH 根，用 --root <DSH_HOME> 指定');
+  const file = join(root, 'profiles', profile, 'cordis.patch.yml');
+  if (!existsSync(file)) fail(`找不到 DSH profile 配置：${file}`);
+  const guardSource = join(ROOT, 'station', 'qq-reply-guard.mjs');
+  if (!existsSync(guardSource)) fail(`找不到 QQ 输出保护插件：${guardSource}`);
+  const source = readFileSync(file, 'utf8');
+  const id = 'kb-qa-qq-reply-guard';
+  const name = resolve(guardSource);
+  if (new RegExp(`^\\s*- id: ${id}\\s*$`, 'm').test(source)) {
+    if (!source.includes(`name: '${name}'`)) {
+      fail(`${file} 已有 ${id}，但模块路径不同；为避免加载未知代码，未写入`);
+    }
+    ok('QQ 输出保护插件已启用（仅 kb-qa 会清理模型转发前缀）');
+    return;
+  }
+  const entry = `\n- insert:\n    - id: ${id}\n      name: '${name}'\n      config:\n        agentPreset: kb-qa\n        dshHome: '${resolve(root)}'\n`;
+  if (!flag('apply')) {
+    console.log(`演练：将在 ${file} 加入 ${id}，由 QQ 发送层清理模型的转发前缀。`);
+    console.log('确认后执行：node station/kbctl.mjs im-reply-guard --apply，然后重启 DSH。');
+    return;
+  }
+  const backup = `${file}.bak-${Date.now()}`;
+  copyFileSync(file, backup);
+  writeFileSync(file, `${source.trimEnd()}${entry}`, 'utf8');
+  ok(`已启用 QQ 输出保护插件（备份：${backup}）`);
+  console.log('重启 DSH 后生效；它只删除 kb-qa QQ 回复开头的已知模型元说明。');
+}
+
 // ─────────────────────────── reset-session ───────────────────────────
 // 把"在群里发 /new"换成一条本机命令。为什么需要：
 //   1) 预设绑定只在**建会话那一刻**读一次（bot-workspace-store.mjs:1037 `agentPresetFor(botId)`
@@ -628,6 +663,7 @@ else if (cmd === 'ship') await cmdShip();
 else if (cmd === 'install') cmdInstall();
 else if (cmd === 'verify') await cmdVerify();
 else if (cmd === 'im-defaults') cmdImDefaults();
+else if (cmd === 'im-reply-guard') cmdImReplyGuard();
 else if (cmd === 'reset-session') await cmdResetSession();
 else if (cmd === 'render') cmdRender();
 else if (cmd === 'version') cmdVersion();
@@ -643,5 +679,6 @@ else console.log(`用法：node kbctl.mjs <doctor|init|import|status|install|ver
   install [--root] [--dry-run]  渲染并安装预设（kb-ask.mjs 单一来源，不复制第二份）
   verify              端到端 + 正/负例召回回归（打已安装预设）+ 挂载自检 + 宿主连通
   im-defaults [--apply]  将 DSH 的“新绑定 QQ bot”默认预设设为 kb-qa（重启后生效）
+  im-reply-guard [--apply] 在 QQ 发送层清理 kb-qa 模型回复的已知转发前缀（重启后生效）
   reset-session [--apply]    清掉群里已有的会话绑定，替代在群里发 /new（须先退出 DSH）
   render  [--apply]          只刷新仓库渲染快照 preset-kb-qa/agent.cordis.yml（不碰线上）`);
