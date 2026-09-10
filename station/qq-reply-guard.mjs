@@ -6,7 +6,9 @@ export const META_PREAMBLE = /^\s*(?:i(?:'|’)m(?:(?: being asked)? to copy| co
 // 某些模型会在照抄工具 reply 时，把标题里的原问题连续复制两次。只归一化
 // 完全相同、紧邻、且位于固定 QQ 标题结构中的两行，正常多行问题保持原样。
 export const DUPLICATED_QUESTION_ECHO = /^(@[^\r\n]{1,64} 你问的「)([^\r\n]+)\r?\n\2(」：)/;
-export const DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard */';
+const LEGACY_META_PREAMBLE = /^\s*i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?\.?\s*/i;
+const LEGACY_DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard */';
+export const DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard:v2 */';
 
 export function stripModelMetaPreamble(text) {
   return typeof text === 'string' ? text.replace(META_PREAMBLE, '') : text;
@@ -31,6 +33,26 @@ export function patchDshImQqDelivery(source) {
   const head = 'let q=MRe(j,F),J=';
   const tail = ':q,x=null,P=null;try{';
   const count = (needle) => source.split(needle).length - 1;
+  const guard = (expression) => `${expression}.replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK}`;
+
+  // v1 的标记会让旧逻辑提前返回，导致已部署的 bundle 永远收不到后续规则。
+  // 仅接受 v1 自己生成的精确片段；不匹配就安全失败，绝不猜测性改写第三方 bundle。
+  const legacyCleanup = `.replace(${LEGACY_META_PREAMBLE},"")${LEGACY_DSH_IM_GUARD_MARK}`;
+  if (source.includes(LEGACY_DSH_IM_GUARD_MARK)) {
+    if (count(head) !== 1 || count(legacyCleanup) !== 1) {
+      throw new Error('dsh-im QQ legacy guard shape changed; refusing to upgrade');
+    }
+    const headAt = source.indexOf(head);
+    const cleanupAt = source.indexOf(legacyCleanup, headAt + head.length);
+    const afterAt = cleanupAt + legacyCleanup.length;
+    if (cleanupAt < 0 || !source.startsWith(',x=null,P=null;try{', afterAt)) {
+      throw new Error('dsh-im QQ legacy guard is out of order; refusing to upgrade');
+    }
+    const before = source.slice(0, headAt + head.length);
+    const expression = source.slice(headAt + head.length, cleanupAt);
+    return { source: `${before}${guard(expression)}${source.slice(afterAt)}`, changed: true };
+  }
+
   if (count(head) !== 1 || count(tail) !== 1) {
     throw new Error('dsh-im QQ final-delivery anchor changed; refusing to patch');
   }
@@ -41,7 +63,7 @@ export function patchDshImQqDelivery(source) {
   const before = source.slice(0, headAt + head.length);
   const expression = source.slice(headAt + head.length, tailAt);
   const after = source.slice(tailAt + tail.length);
-  const patched = `${before}(${expression}:q).replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK},x=null,P=null;try{${after}`;
+  const patched = `${before}${guard(`(${expression}:q)`)},x=null,P=null;try{${after}`;
   return { source: patched, changed: true };
 }
 

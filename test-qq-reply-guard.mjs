@@ -39,6 +39,17 @@ assert.ok(patched.source.includes('J=(H.length>0?`${q}---${H.join("\\n")}`:q).re
 assert.ok(patched.source.includes(`.replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")`));
 assert.doesNotThrow(() => new Function(patched.source), '写入 bundle 的片段必须能被 Node 解析');
 assert.equal(patchDshImQqDelivery(patched.source).changed, false, '重复执行不得二次改写');
+
+const legacyGuardMark = '/* student-ask-han-qq-reply-guard */';
+const legacyPreamble = /^\s*i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?\.?\s*/i;
+const legacyFixture = 'function delivery(){let H=[],j,F;let q=MRe(j,F),J=(H.length>0?`${q}---${H.join("\\n")}`:q).replace('
+  + `${legacyPreamble},"")${legacyGuardMark},x=null,P=null;try{send(J)}catch{}}`;
+const upgraded = patchDshImQqDelivery(legacyFixture);
+assert.equal(upgraded.changed, true, '已部署的 v1 guard 必须能升级到当前规则');
+assert.ok(upgraded.source.includes(DSH_IM_GUARD_MARK));
+assert.ok(!upgraded.source.includes(legacyGuardMark));
+assert.doesNotThrow(() => new Function(upgraded.source), '升级已部署 bundle 后仍须可解析');
+
 assert.throws(
   () => patchDshImQqDelivery('let q=MRe(j,F),J=answer:q,x=null,P=null;try{ one let q=MRe(j,F),J=answer:q,x=null,P=null;try{'),
   /anchor changed/,
