@@ -1,12 +1,21 @@
 export const name = 'kb-qa-qq-reply-guard';
 
-// 模型偶发把“转发工具回复”的内部说明也输出。只删这个明确的英文元说明，
+// 模型偶发把“转发工具回复”的内部说明也输出。只删已观测到的英文元说明，
 // 不做宽泛的自然语言清洗，避免误改知识库的正常答案。
-export const META_PREAMBLE = /^\s*i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?\.?\s*/i;
+export const META_PREAMBLE = /^\s*(?:i(?:'|’)m(?:(?: being asked)? to copy| copying) (?:the )?reply verbatim(?: as (?:requested|instructed))?|i need to copy (?:the )?reply verbatim(?: as (?:requested|instructed))?(?:,\s*so i(?:'|’)ll reproduce it exactly as provided)?)\.?\s*/i;
+// 某些模型会在照抄工具 reply 时，把标题里的原问题连续复制两次。只归一化
+// 完全相同、紧邻、且位于固定 QQ 标题结构中的两行，正常多行问题保持原样。
+export const DUPLICATED_QUESTION_ECHO = /^(@[^\r\n]{1,64} 你问的「)([^\r\n]+)\r?\n\2(」：)/;
 export const DSH_IM_GUARD_MARK = '/* student-ask-han-qq-reply-guard */';
 
 export function stripModelMetaPreamble(text) {
   return typeof text === 'string' ? text.replace(META_PREAMBLE, '') : text;
+}
+
+export function sanitizeQqReply(text) {
+  return typeof text === 'string'
+    ? stripModelMetaPreamble(text).replace(DUPLICATED_QUESTION_ECHO, '$1$2$3')
+    : text;
 }
 
 /**
@@ -32,7 +41,7 @@ export function patchDshImQqDelivery(source) {
   const before = source.slice(0, headAt + head.length);
   const expression = source.slice(headAt + head.length, tailAt);
   const after = source.slice(tailAt + tail.length);
-  const patched = `${before}(${expression}:q).replace(${META_PREAMBLE},"")${DSH_IM_GUARD_MARK},x=null,P=null;try{${after}`;
+  const patched = `${before}(${expression}:q).replace(${META_PREAMBLE},"").replace(${DUPLICATED_QUESTION_ECHO},"$1$2$3")${DSH_IM_GUARD_MARK},x=null,P=null;try{${after}`;
   return { source: patched, changed: true };
 }
 
